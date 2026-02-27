@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仲智有限公司</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --light: #f8f9fa;
+            --text: #636e72;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: var(--white);
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text);
+            margin-left: 2rem;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 5%;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: 4px;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: var(--accent);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(9, 132, 227, 0.3);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(9, 132, 227, 0.4);
+        }
+
+        /* About Section */
+        .section {
+            padding: 6rem 5%;
+        }
+
+        .about {
+            background: var(--white);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+            font-weight: 500;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+        }
+
+        .section-title .line {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 0 auto;
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .about-content p {
+            color: var(--text);
+            font-size: 1.1rem;
+            line-height: 2;
+        }
+
+        /* Services Section */
+        .services {
+            background: var(--light);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--white);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent), #74b9ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .service-card p {
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .contact .section-title h2 {
+            color: var(--white);
+        }
+
+        .contact .line {
+            background: var(--white);
+        }
+
+        .contact-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .contact-item svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 1rem;
+            stroke: var(--accent);
+        }
+
+        .contact-item a {
+            color: var(--white);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .section {
+                padding: 4rem 5%;
+            }
+
+            .hero h1 {
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">仲智<span>.</span></div>
+        <nav>
+            <a href="#about">關於我們</a>
+            <a href="#services">服務項目</a>
+            <a href="#contact">聯絡我們</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>仲智有限公司</h1>
+            <p>專業訂閱服務平台，為您打造便捷數位生活</p>
+            <a href="#contact" class="cta-btn">與我們聯繫</a>
+        </div>
+    </section>
+
+    <section id="about" class="section about">
+        <div class="section-title">
+            <h2>關於我們</h2>
+            <div class="line"></div>
+        </div>
+        <div class="about-content">
+            <p>仲智有限公司成立於新竹，致力於提供優質的訂閱服務。我們堅持誠信、創新的經營理念，透過專業技術與貼心服務，為客戶創造價值。選擇仲智，選擇信賴。</p>
+        </div>
+    </section>
+
+    <section id="services" class="section services">
+        <div class="section-title">
+            <h2>服務項目</h2>
+            <div class="line"></div>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">📦</div>
+                <h3>訂閱管理</h3>
+                <p>一站式訂閱服務管理，讓您輕鬆掌控所有訂閱項目</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔄</div>
+                <h3>自動續約</h3>
+                <p>智慧自動續約功能，確保服務不中斷</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💳</div>
+                <h3>多元支付</h3>
+                <p>支援多種支付方式，付款更靈活便利</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎧</div>
+                <h3>客戶服務</h3>
+                <p>專業客服團隊，即時為您解決問題</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="section contact">
+        <div class="section-title">
+            <h2>聯絡我們</h2>
+            <div class="line"></div>
+        </div>
+        <div class="contact-content">
+            <div class="contact-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span>新竹縣竹北市復興三路二段168號9樓之5</span>
+            </div>
+            <div class="contact-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                <a href="mailto:second@second-co.tw">second@second-co.tw</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 仲智有限公司. All rights reserved.</p>
+    </footer>
+</body>
+</html>
