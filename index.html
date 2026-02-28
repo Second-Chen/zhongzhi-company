@@ -68,6 +68,23 @@
             color: var(--accent);
         }
 
+        .login-btn {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: var(--accent);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            margin-left: 2rem;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #0769b5;
+            transform: translateY(-2px);
+        }
+
         /* Hero Section */
         .hero {
             min-height: 100vh;
@@ -289,6 +306,7 @@
             <a href="#about">關於我們</a>
             <a href="#services">服務項目</a>
             <a href="#contact">聯絡我們</a>
+            <a href="login.html" class="login-btn">登入</a>
         </nav>
     </header>
 
