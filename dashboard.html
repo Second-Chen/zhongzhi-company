@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>後台管理 - 仲智有限公司</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --light: #f8f9fa;
+            --text: #636e72;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: var(--light);
+        }
+
+        /* Header */
+        header {
+            background: var(--white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 5%;
+        }
+
+        .welcome {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+        .welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome p {
+            color: var(--text);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+        .table-container h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            background: #e8f8f5;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">仲智有限公司 - 管理後台</div>
+        <div class="user-info">
+            <span id="username">歡迎，admin</span>
+            <a href="index.html" class="logout-btn" onclick="logout()">登出</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="welcome">
+            <h1>🎉 登入成功！</h1>
+            <p>歡迎來到仲智有限公司管理後台</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>總會員數</h3>
+                <div class="number" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>待處理申請</h3>
+                <div class="number" id="pendingCount">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>已完成</h3>
+                <div class="number" id="completedCount">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>API 狀態</h3>
+                <div class="number" style="color: #27ae60;">正常</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>最新 Apple ID 申請</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>姓名</th>
+                        <th>Email</th>
+                        <th>電話</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="userTable">
+                    <tr>
+                        <td colspan="5">載入中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Check if logged in
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+        }
+
+        // Load data from API
+        async function loadData() {
+            try {
+                // For now, show demo data
+                document.getElementById('totalUsers').textContent = '100';
+                document.getElementById('pendingCount').textContent = '100';
+                document.getElementById('completedCount').textContent = '0';
+                
+                // Sample user data
+                const users = [
+                    { id: 1, name: 'Aarav Sharma', email: 'aarav.sharma@second-co.tw', phone: '910757687', status: 'Pending' },
+                    { id: 2, name: 'Abhishek Kumar', email: 'abhishek.kumar@second-co.tw', phone: '910757687', status: 'Pending' },
+                    { id: 3, name: 'Aditya Singh', email: 'aditya.singh@second-co.tw', phone: '910757687', status: 'Pending' },
+                    { id: 4, name: 'Ajay Patel', email: 'ajay.patel@second-co.tw', phone: '910757687', status: 'Pending' },
+                    { id: 5, name: 'Akash Reddy', email: 'akash.reddy@second-co.tw', phone: '910757687', status: 'Pending' }
+                ];
+
+                const tbody = document.getElementById('userTable');
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone}</td>
+                        <td><span class="status">${user.status}</span></td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
