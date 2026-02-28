@@ -187,6 +187,79 @@
             margin: 0 auto;
         }
 
+        /* Pricing Section */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--accent);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .pricing-header h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .pricing-card .price span {
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-top: 1.5rem;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: var(--text);
+        }
+
         .service-card {
             background: var(--white);
             padding: 3rem 2rem;
@@ -303,6 +376,7 @@
         <div class="logo">桃園結義計畫</div>
         <nav>
             <a href="#about">關於計畫</a>
+            <a href="#subscriptions">訂閱項目</a>
             <a href="#contact">聯絡我們</a>
             <a href="login.html" class="login-btn">登入</a>
         </nav>
@@ -346,6 +420,55 @@
                 <div class="service-icon">⚡</div>
                 <h3>立即交付</h3>
                 <p>付款後即時交付 - 無需等待</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subscription Plans Section -->
+    <section id="subscriptions" class="section subscriptions">
+        <div class="section-title">
+            <h2>訂閱項目</h2>
+            <div class="line"></div>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Apple One 個人版</h3>
+                    <div class="price">$299<span>/月</span></div>
+                </div>
+                <ul class="pricing-features">
+                    <li>🎵 Apple Music</li>
+                    <li>📺 Apple TV+</li>
+                    <li>🎮 Apple Arcade</li>
+                    <li>☁️ 50GB iCloud+</li>
+                </ul>
+            </div>
+            <div class="pricing-card featured">
+                <div class="pricing-badge">熱銷</div>
+                <div class="pricing-header">
+                    <h3>Apple One 家庭版</h3>
+                    <div class="price">$399<span>/月</span></div>
+                </div>
+                <ul class="pricing-features">
+                    <li>🎵 Apple Music</li>
+                    <li>📺 Apple TV+</li>
+                    <li>🎮 Apple Arcade</li>
+                    <li>☁️ 200GB iCloud+</li>
+                </ul>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Apple One 旗艦版</h3>
+                    <div class="price">$599<span>/月</span></div>
+                </div>
+                <ul class="pricing-features">
+                    <li>🎵 Apple Music</li>
+                    <li>📺 Apple TV+</li>
+                    <li>🎮 Apple Arcade</li>
+                    <li>☁️ 2TB iCloud+</li>
+                    <li>💪 Apple Fitness+</li>
+                    <li>📰 Apple News+</li>
+                </ul>
             </div>
         </div>
     </section>
