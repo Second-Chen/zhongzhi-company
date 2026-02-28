@@ -9,6 +9,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Force HTTPS redirect (if behind proxy)
+// Note: Zeabur handles SSL termination, so this may not be needed
+
 // Serve static files
 app.use(express.static(__dirname));
 
