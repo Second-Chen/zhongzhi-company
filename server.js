@@ -2,11 +2,15 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Serve static files
+app.use(express.static(__dirname));
 
 // Database configuration
 const dbConfig = {
@@ -98,6 +102,11 @@ app.post('/api/register', async (req, res) => {
         console.error('Register error:', error);
         res.status(500).json({ message: '伺服器錯誤' });
     }
+});
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;

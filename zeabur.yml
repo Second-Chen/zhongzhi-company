@@ -1,0 +1,4 @@
+# zeabur.yml - Zeabur deployment configuration
+install: npm install
+build: npm run build
+start: node server.js
