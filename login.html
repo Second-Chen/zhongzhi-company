@@ -58,50 +58,26 @@
             font-size: 0.95rem;
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
+        .line-login-btn {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--primary);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .login-btn {
             width: 100%;
             padding: 1rem;
-            background: var(--accent);
-            color: var(--white);
+            background: #06C755;
+            color: white;
             border: none;
             border-radius: 10px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none;
             transition: all 0.3s;
-            font-family: inherit;
         }
 
-        .login-btn:hover {
-            background: #0769b5;
+        .line-login-btn:hover {
+            background: #05b04a;
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(9, 132, 227, 0.3);
+            box-shadow: 0 10px 30px rgba(6, 199, 85, 0.3);
         }
 
         .back-link {
@@ -116,26 +92,6 @@
         .back-link:hover {
             color: var(--accent);
         }
-
-        .error-msg {
-            background: #ffeaea;
-            color: #e74c3c;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-        }
-
-        .success-msg {
-            background: #e8f8f5;
-            color: #27ae60;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -146,81 +102,11 @@
             <p>會員登入</p>
         </div>
 
-        <div id="errorMsg" class="error-msg"></div>
-        <div id="successMsg" class="success-msg"></div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">帳號</label>
-                <input type="text" id="username" name="username" required placeholder="請輸入帳號">
-            </div>
-            <div class="form-group">
-                <label for="password">密碼</label>
-                <input type="password" id="password" name="password" required placeholder="請輸入密碼">
-            </div>
-            <button type="submit" class="login-btn">登入</button>
-        </form>
+        <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=YOUR_LINE_CHANNEL_ID&redirect_uri=YOUR_CALLBACK_URL&state=STATE&scope=openid%20profile%20email" class="line-login-btn">
+            📱 使用 LINE 登入
+        </a>
 
         <a href="index.html" class="back-link">← 返回首頁</a>
     </div>
-
-    <script>
-        // API Configuration - using relative path (same domain)
-        const API_URL = '';
-
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-            const successMsg = document.getElementById('successMsg');
-
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
-
-            try {
-                const response = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    successMsg.textContent = '登入成功！正在跳轉...';
-                    successMsg.style.display = 'block';
-                    
-                    // Store token
-                    localStorage.setItem('token', data.token);
-                    
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
-                } else {
-                    errorMsg.textContent = data.message || '登入失敗，請檢查帳號密碼';
-                    errorMsg.style.display = 'block';
-                }
-            } catch (error) {
-                // For demo purposes, simulate login
-                if (username === 'admin' && password === 'admin123') {
-                    successMsg.textContent = '登入成功！這是示範帳號';
-                    successMsg.style.display = 'block';
-                    localStorage.setItem('token', 'demo-token');
-                    localStorage.setItem('username', username);
-                    
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                } else {
-                    errorMsg.textContent = '無法連接到伺服器。請確認後端服務已部署。';
-                    errorMsg.style.display = 'block';
-                }
-            }
-        });
-    </script>
 </body>
 </html>
