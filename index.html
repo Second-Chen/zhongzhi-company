@@ -481,23 +481,13 @@
             <a href="#subscriptions">訂閱項目</a>
             <a href="#about">關於計畫</a>
             <a href="#contact">聯絡我們</a>
-            <a href="login.html" class="login-btn">登入</a>
-            <div class="user-menu">
-                <div class="user-icon" onclick="toggleDropdown()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <a href="login.html" class="login-btn" id="loginBtn">登入</a>
+            <div class="user-menu" id="userMenu" style="display: none;">
+                <div class="user-icon" onclick="toggleDropdown()" id="userIcon">
+                    <img id="userAvatar" src="" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                 </div>
                 <div class="dropdown-menu" id="userDropdown">
-                    <a href="#subscriptions">
-                        <span class="icon">🛒</span>
-                        訂閱
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#contact">
-                        <span class="icon">❓</span>
-                        幫助和支援
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="dashboard.html">
+                    <a href="subscriptions.html">
                         <span class="icon">📋</span>
                         我的訂閱
                     </a>
@@ -635,10 +625,35 @@
         document.addEventListener('click', function(event) {
             const userMenu = document.querySelector('.user-menu');
             const dropdown = document.getElementById('userDropdown');
-            if (!userMenu.contains(event.target)) {
+            if (userMenu && !userMenu.contains(event.target)) {
                 dropdown.classList.remove('show');
             }
         });
+
+        // Check login status and update UI
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const loginBtn = document.getElementById('loginBtn');
+            const userMenu = document.getElementById('userMenu');
+            const userAvatar = document.getElementById('userAvatar');
+
+            if (isLoggedIn) {
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'inline-block';
+                
+                // Get LINE profile picture
+                const linePictureUrl = localStorage.getItem('line_pictureUrl');
+                if (linePictureUrl) {
+                    userAvatar.src = linePictureUrl;
+                } else {
+                    // Default avatar
+                    userAvatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                }
+            }
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
     </script>
 </body>
 </html>

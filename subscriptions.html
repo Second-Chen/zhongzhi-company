@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂閱 - 家庭共享計畫</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --light: #f8f9fa;
+            --text: #636e72;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: var(--light);
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 40px;
+            margin-right: 8px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text);
+            margin-left: 2rem;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+            margin-left: 1rem;
+        }
+
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .user-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            min-width: 180px;
+            overflow: hidden;
+            z-index: 1001;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--primary);
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .dropdown-menu a:hover {
+            background: var(--light);
+        }
+
+        .dropdown-menu .icon {
+            margin-right: 12px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 120px auto 40px;
+            padding: 0 5%;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .user-info {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-details h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-details p {
+            color: var(--text);
+        }
+
+        .logout-btn {
+            margin-left: auto;
+            padding: 0.75rem 1.5rem;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Subscriptions Grid */
+        .subscriptions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .subscription-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .subscription-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .subscription-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+
+        .subscription-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .subscription-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .subscription-details {
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .subscription-details p {
+            margin-bottom: 0.5rem;
+        }
+
+        .no-subscriptions {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text);
+        }
+
+        .no-subscriptions-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-prompt {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .login-prompt h2 {
+            margin-bottom: 1rem;
+        }
+
+        .login-prompt a {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+
+        .login-prompt a:hover {
+            background: #0769b5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">
+            <img src="family-logo.png" alt="Logo">
+            家庭共享計畫
+        </a>
+        <nav>
+            <a href="index.html">首頁</a>
+            <div class="user-menu" id="userMenu" style="display: none;">
+                <div class="user-icon" onclick="toggleDropdown()">
+                    <img id="userAvatar" src="" alt="User">
+                </div>
+                <div class="dropdown-menu" id="userDropdown">
+                    <a href="subscriptions.html">
+                        <span class="icon">📋</span>
+                        我的訂閱
+                    </a>
+                    <a href="#" onclick="logout()">
+                        <span class="icon">🚪</span>
+                        登出
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">我的訂閱</h1>
+        
+        <!-- Logged out state -->
+        <div id="loggedOutContent" style="display: none;">
+            <div class="login-prompt">
+                <h2>請先登入</h2>
+                <p>登入後即可查看您的訂閱資訊</p>
+                <a href="login.html">立即登入</a>
+            </div>
+        </div>
+
+        <!-- Logged in state -->
+        <div id="loggedInContent" style="display: none;">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <img id="displayAvatar" src="" alt="User">
+                </div>
+                <div class="user-details">
+                    <h2 id="displayName">用戶</h2>
+                    <p id="displayEmail">Email</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">登出</button>
+            </div>
+
+            <div class="subscriptions-grid" id="subscriptionsList">
+                <!-- Subscriptions will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Check login status and load data
+        function init() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userMenu = document.getElementById('userMenu');
+            const loggedOutContent = document.getElementById('loggedOutContent');
+            const loggedInContent = document.getElementById('loggedInContent');
+
+            if (!isLoggedIn) {
+                loggedOutContent.style.display = 'block';
+                loggedInContent.style.display = 'none';
+                return;
+            }
+
+            // Show logged in UI
+            userMenu.style.display = 'inline-block';
+            loggedOutContent.style.display = 'none';
+            loggedInContent.style.display = 'block';
+
+            // Load user info
+            const linePictureUrl = localStorage.getItem('line_pictureUrl');
+            const lineDisplayName = localStorage.getItem('line_displayName');
+            const username = localStorage.getItem('username');
+
+            const userAvatar = document.getElementById('userAvatar');
+            const displayAvatar = document.getElementById('displayAvatar');
+            const displayName = document.getElementById('displayName');
+            const displayEmail = document.getElementById('displayEmail');
+
+            if (linePictureUrl) {
+                userAvatar.src = linePictureUrl;
+                displayAvatar.src = linePictureUrl;
+            } else {
+                userAvatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                displayAvatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+            }
+
+            displayName.textContent = lineDisplayName || username || '用戶';
+            displayEmail.textContent = localStorage.getItem('line_email') || '';
+
+            // Load subscriptions (placeholder - can be connected to backend API)
+            loadSubscriptions();
+        }
+
+        function loadSubscriptions() {
+            const subscriptionsList = document.getElementById('subscriptionsList');
+            
+            // Placeholder subscriptions data - can be replaced with API call
+            const subscriptions = [];
+            
+            if (subscriptions.length === 0) {
+                subscriptionsList.innerHTML = `
+                    <div class="no-subscriptions" style="grid-column: 1 / -1;">
+                        <div class="no-subscriptions-icon">📦</div>
+                        <h3>尚無訂閱</h3>
+                        <p>您目前沒有任何訂閱項目</p>
+                        <a href="index.html#subscriptions" style="display: inline-block; margin-top: 1rem; color: var(--accent);">瀏覽訂閱項目</a>
+                    </div>
+                `;
+            } else {
+                subscriptionsList.innerHTML = subscriptions.map(sub => `
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <img src="${sub.icon}" alt="${sub.name}" class="subscription-icon">
+                            <div class="subscription-title">${sub.name}</div>
+                        </div>
+                        <span class="subscription-status status-active">使用中</span>
+                        <div class="subscription-details">
+                            <p>💰 每月 NT$ ${sub.price}</p>
+                            <p>👤 共享人數: ${sub.members} 人</p>
+                            <p>📅 下次扣款: ${sub.nextBilling}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
