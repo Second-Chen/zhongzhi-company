@@ -107,6 +107,77 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// LINE Login callback endpoint
+app.post('/api/line-callback', async (req, res) => {
+    try {
+        const { line_user_id, line_display_name, line_picture_url, line_email, access_token, refresh_token, expires_in } = req.body;
+
+        if (!line_user_id) {
+            return res.status(400).json({ message: '缺少 LINE 用戶資料' });
+        }
+
+        // Calculate token expiration
+        const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+
+        // Check if user exists
+        const [existingUser] = await pool.execute(
+            'SELECT * FROM users WHERE line_user_id = ?',
+            [line_user_id]
+        );
+
+        if (existingUser.length > 0) {
+            // Update existing user
+            await pool.execute(
+                `UPDATE users SET 
+                    line_display_name = ?,
+                    line_picture_url = ?,
+                    line_email = ?,
+                    line_access_token = ?,
+                    line_refresh_token = ?,
+                    line_token_expires_at = ?,
+                    login_method = 'line',
+                    last_login_at = NOW()
+                WHERE line_user_id = ?`,
+                [line_display_name, line_picture_url, line_email, access_token, refresh_token, tokenExpiresAt, line_user_id]
+            );
+
+            res.json({
+                success: true,
+                message: '登入成功',
+                user: {
+                    id: existingUser[0].user_id,
+                    username: existingUser[0].username,
+                    line_display_name
+                }
+            });
+        } else {
+            // Create new user
+            const username = line_display_name || 'line_user_' + line_user_id.slice(0, 8);
+            const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+
+            const [result] = await pool.execute(
+                `INSERT INTO users (username, password_hash, email, line_user_id, line_display_name, line_picture_url, line_email, line_access_token, line_refresh_token, line_token_expires_at, login_method)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'line')`,
+                [username, defaultPassword, line_email || '', line_user_id, line_display_name, line_picture_url, line_email, access_token, refresh_token, tokenExpiresAt]
+            );
+
+            res.json({
+                success: true,
+                message: '註冊並登入成功',
+                user: {
+                    id: result.insertId,
+                    username,
+                    line_display_name
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('LINE callback error:', error);
+        res.status(500).json({ message: '伺服器錯誤' });
+    }
+});
+
 // Serve index.html for root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

@@ -43,6 +43,7 @@
         const LINE_CHANNEL_ID = '2009276934';
         const LINE_CHANNEL_SECRET = '5518fca16af81f0a9ae52c8b3ee31edd';
         const CALLBACK_URL = 'https://familyshare.online/callback.html';
+        const API_URL = ''; // Same domain
 
         // Get authorization code from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -69,28 +70,66 @@
                 })
             })
             .then(response => response.json())
-            .then(data => {
+            .then(async data => {
                 if (data.access_token) {
                     // Get user profile
-                    return fetch('https://api.line.me/v2/profile', {
+                    const profileResponse = await fetch('https://api.line.me/v2/profile', {
                         headers: {
                             'Authorization': 'Bearer ' + data.access_token
                         }
                     });
+                    const userProfile = await profileResponse.json();
+
+                    // Get user email (if scope includes email)
+                    let lineEmail = '';
+                    try {
+                        const emailResponse = await fetch('https://api.line.me/v2/oauth/verify', {
+                            headers: {
+                                'Authorization': 'Bearer ' + data.access_token
+                            }
+                        });
+                        const emailData = await emailResponse.json();
+                        lineEmail = emailData.email || '';
+                    } catch (e) {
+                        // Email not available
+                    }
+
+                    // Send user data to server to save in database
+                    const serverResponse = await fetch(`${API_URL}/api/line-callback`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            line_user_id: userProfile.userId,
+                            line_display_name: userProfile.displayName,
+                            line_picture_url: userProfile.pictureUrl,
+                            line_email: lineEmail,
+                            access_token: data.access_token,
+                            refresh_token: data.refresh_token,
+                            expires_in: data.expires_in
+                        })
+                    });
+
+                    const serverData = await serverResponse.json();
+
+                    if (serverData.success) {
+                        // Store user info in localStorage
+                        localStorage.setItem('userId', serverData.user.id);
+                        localStorage.setItem('username', serverData.user.username);
+                        localStorage.setItem('line_displayName', userProfile.displayName);
+                        localStorage.setItem('line_pictureUrl', userProfile.pictureUrl);
+                        localStorage.setItem('isLoggedIn', 'true');
+                        localStorage.setItem('loginMethod', 'line');
+                        
+                        // Redirect to dashboard or home
+                        window.location.href = 'index.html';
+                    } else {
+                        throw new Error(serverData.message || '儲存失敗');
+                    }
                 } else {
                     throw new Error('無法取得 access token');
                 }
-            })
-            .then(response => response.json())
-            .then(userProfile => {
-                // Store user info (in real app, send to your server)
-                localStorage.setItem('line_userId', userProfile.userId);
-                localStorage.setItem('line_displayName', userProfile.displayName);
-                localStorage.setItem('line_pictureUrl', userProfile.pictureUrl);
-                localStorage.setItem('isLoggedIn', 'true');
-                
-                // Redirect to dashboard or home
-                window.location.href = 'index.html';
             })
             .catch(error => {
                 console.error('Error:', error);
