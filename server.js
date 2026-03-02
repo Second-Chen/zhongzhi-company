@@ -270,6 +270,89 @@ app.post('/api/coupon/use', async (req, res) => {
     }
 });
 
+// Create order endpoint
+app.post('/api/orders/create', async (req, res) => {
+    try {
+        const { product_type, plan_duration_months, sub_accounts, original_price, coupon_code, discount_amount, final_price, payment_method, notes } = req.body;
+
+        if (!product_type || !plan_duration_months || !original_price || !final_price) {
+            return res.status(400).json({ success: false, message: '請填寫必要欄位' });
+        }
+
+        // Generate order ID
+        const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase();
+
+        // Get user ID from token if available
+        let userId = null;
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            try {
+                const token = Buffer.from(authHeader.split(' ')[1], 'base64').toString();
+                const userIdFromToken = parseInt(token.split(':')[0]);
+                if (!isNaN(userIdFromToken)) {
+                    userId = userIdFromToken;
+                }
+            } catch (e) {
+                // Invalid token, continue without user
+            }
+        }
+
+        // Insert order
+        const [result] = await pool.execute(
+            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, coupon_code, discount_amount, final_price, payment_method, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, coupon_code || null, discount_amount || 0, final_price, payment_method || null, notes || null]
+        );
+
+        res.json({
+            success: true,
+            message: '訂單已建立',
+            order_id: orderId,
+            order: {
+                id: result.insertId,
+                order_id: orderId,
+                product_type,
+                final_price
+            }
+        });
+
+    } catch (error) {
+        console.error('Create order error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// Get orders endpoint
+app.get('/api/orders', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ success: false, message: '請先登入' });
+        }
+
+        const token = Buffer.from(authHeader.split(' ')[1], 'base64').toString();
+        const userId = parseInt(token.split(':')[0]);
+
+        if (isNaN(userId)) {
+            return res.status(401).json({ success: false, message: '無效的登入資訊' });
+        }
+
+        const [rows] = await pool.execute(
+            'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+
+        res.json({
+            success: true,
+            orders: rows
+        });
+
+    } catch (error) {
+        console.error('Get orders error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

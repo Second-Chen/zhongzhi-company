@@ -695,7 +695,7 @@
                     <li>🎧 高音源質串流（320kbps）</li>
                     <li>📥 離線收聽，無廣告打擾</li>
                 </ul>
-                <a href="#contact" class="pricing-btn">立即購買</a>
+                <a href="javascript:void(0)" class="pricing-btn" onclick="openModal('kkboxModal')">立即購買</a>
             </div>
             <div class="pricing-card featured">
                 <div class="pricing-badge">熱銷</div>
@@ -710,7 +710,7 @@
                     <li>☁️ 每位使用者 1 TB (1024 GB) 的 OneDrive 雲端儲存空間</li>
                     <li>🤖 包含最高使用限制的 AI 聊天與創作功能</li>
                 </ul>
-                <a href="#contact" class="pricing-btn">立即購買</a>
+                <a href="javascript:void(0)" class="pricing-btn" onclick="openModal('microsoft365Modal')">立即購買</a>
             </div>
         </div>
     </section>
@@ -804,6 +804,70 @@
         </div>
     </div>
 
+    <!-- KKBOX Purchase Modal -->
+    <div class="modal-overlay" id="kkboxModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('kkboxModal')">&times;</button>
+            <div class="modal-header">
+                <h3>KKBOX 家庭方案</h3>
+                <div class="subtitle">確認購買資訊</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-row">
+                    <span class="modal-label">方案時長</span>
+                    <span class="modal-value">12 個月</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">用戶類型</span>
+                    <span class="modal-value">1 個子帳戶 (與5人共享)</span>
+                </div>
+                <div class="coupon-input">
+                    <input type="text" id="kkboxCouponCode" placeholder="輸入優惠碼">
+                    <button onclick="applyCoupon('kkbox')">套用</button>
+                </div>
+                <div class="modal-row" style="margin-top: 1rem;">
+                    <span class="modal-label">價格</span>
+                    <span class="modal-value highlight" id="kkboxPrice">NT$ 780</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-buy-btn" onclick="confirmPurchase('kkbox')">購買</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Microsoft 365 Purchase Modal -->
+    <div class="modal-overlay" id="microsoft365Modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('microsoft365Modal')">&times;</button>
+            <div class="modal-header">
+                <h3>Microsoft 365 進階版</h3>
+                <div class="subtitle">確認購買資訊</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-row">
+                    <span class="modal-label">方案時長</span>
+                    <span class="modal-value">12 個月</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">用戶類型</span>
+                    <span class="modal-value">1 個子帳戶 (與5人共享)</span>
+                </div>
+                <div class="coupon-input">
+                    <input type="text" id="microsoft365CouponCode" placeholder="輸入優惠碼">
+                    <button onclick="applyCoupon('microsoft365')">套用</button>
+                </div>
+                <div class="modal-row" style="margin-top: 1rem;">
+                    <span class="modal-label">價格</span>
+                    <span class="modal-value highlight" id="microsoft365Price">NT$ 1788</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-buy-btn" onclick="confirmPurchase('microsoft365')">購買</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 家庭共享計畫. All rights reserved.</p>
     </footer>
@@ -877,7 +941,13 @@
             const input = document.getElementById(prefix + 'CouponCode');
             const code = input.value.trim();
             const priceElement = document.getElementById(prefix + 'Price');
-            const originalPrice = prefix === 'yt' ? 780 : (prefix === 'kkbox' ? 780 : 1788);
+            
+            const originalPriceMap = {
+                'yt': 780,
+                'kkbox': 780,
+                'microsoft365': 1788
+            };
+            const originalPrice = originalPriceMap[prefix];
             
             if (!code) {
                 alert('請輸入優惠碼');
@@ -919,17 +989,69 @@
             const input = document.getElementById(prefix + 'CouponCode');
             const code = input.value.trim();
             
-            // If coupon was applied, increment usage
-            if (code) {
+            // Get price info
+            const priceElement = document.getElementById(prefix + 'Price');
+            let originalPrice = prefix === 'yt' ? 780 : (prefix === 'kkbox' ? 780 : 1788);
+            let finalPrice = originalPrice;
+            let discountAmount = 0;
+            let couponCode = code || null;
+
+            // If coupon was applied, calculate discount
+            if (code && priceElement.innerHTML.includes('line-through')) {
+                // Parse the discounted price
+                const match = priceElement.innerHTML.match(/NT\$\s*(\d+)/);
+                if (match) {
+                    finalPrice = parseInt(match[1]);
+                    discountAmount = originalPrice - finalPrice;
+                }
+
+                // Increment coupon usage
                 fetch('/api/coupon/use', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code: code })
-                }).then(res => res.json()).catch(err => console.error('Error:', err));
+                }).catch(err => console.error('Error:', err));
             }
-            
-            alert('感謝您的購買！我們會盡快與您聯繫處理後續事項。');
-            closeModal(prefix + 'Modal');
+
+            // Product mapping
+            const productMap = {
+                'yt': 'youtube',
+                'kkbox': 'kkbox',
+                'microsoft365': 'microsoft365'
+            };
+
+            // Create order data
+            const orderData = {
+                product_type: productMap[prefix],
+                plan_duration_months: 12,
+                sub_accounts: 1,
+                original_price: originalPrice,
+                coupon_code: couponCode,
+                discount_amount: discountAmount,
+                final_price: finalPrice,
+                payment_method: 'pending',
+                notes: ''
+            };
+
+            // Send order to server
+            fetch('/api/orders/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`感謝您的購買！\n訂單編號：${data.order_id}\n金額：NT$ ${finalPrice}\n\n我們會盡快與您聯繫處理後續事項。`);
+                    closeModal(prefix + 'Modal');
+                } else {
+                    alert('訂單建立失敗：' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('訂單建立失敗，請稍後再試');
+            });
         }
     </script>
 </body>
