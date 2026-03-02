@@ -268,16 +268,7 @@
             margin-bottom: 1rem;
         }
 
-        .login-prompt {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .login-prompt h2 {
-            margin-bottom: 1rem;
-        }
-
-        .login-prompt a {
+        .browse-btn {
             display: inline-block;
             padding: 1rem 2rem;
             background: var(--accent);
@@ -288,8 +279,117 @@
             transition: background 0.3s;
         }
 
-        .login-prompt a:hover {
+        .browse-btn:hover {
             background: #0769b5;
+        }
+
+        /* Order details */
+        .order-details {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .order-details h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-product {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .order-product img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .order-product-name {
+            font-weight: 600;
+        }
+
+        .order-product-info {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .order-price {
+            text-align: right;
+        }
+
+        .order-price-original {
+            font-size: 0.85rem;
+            color: var(--text);
+            text-decoration: line-through;
+        }
+
+        .order-price-final {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .order-date {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .order-id {
+            font-size: 0.8rem;
+            color: #999;
         }
     </style>
 </head>
@@ -414,35 +514,107 @@
 
         function loadSubscriptions() {
             const subscriptionsList = document.getElementById('subscriptionsList');
+            const userId = localStorage.getItem('userId');
             
-            // Placeholder subscriptions data - can be replaced with API call
-            const subscriptions = [];
-            
-            if (subscriptions.length === 0) {
+            if (!userId) {
                 subscriptionsList.innerHTML = `
                     <div class="no-subscriptions" style="grid-column: 1 / -1;">
                         <div class="no-subscriptions-icon">📦</div>
                         <h3>尚無訂閱</h3>
                         <p>您目前沒有任何訂閱項目</p>
-                        <a href="index.html#subscriptions" style="display: inline-block; margin-top: 1rem; color: var(--accent);">瀏覽訂閱項目</a>
+                        <a href="index.html#subscriptions" class="browse-btn">瀏覽訂閱項目</a>
                     </div>
                 `;
-            } else {
-                subscriptionsList.innerHTML = subscriptions.map(sub => `
+                return;
+            }
+
+            // Fetch orders from API
+            fetch(`/api/orders/by-user?user_id=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.orders.length > 0) {
+                        renderOrders(data.orders);
+                    } else {
+                        subscriptionsList.innerHTML = `
+                            <div class="no-subscriptions" style="grid-column: 1 / -1;">
+                                <div class="no-subscriptions-icon">📦</div>
+                                <h3>尚無訂閱</h3>
+                                <p>您目前沒有任何訂閱項目</p>
+                                <a href="index.html#subscriptions" class="browse-btn">瀏覽訂閱項目</a>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading orders:', err);
+                    subscriptionsList.innerHTML = `
+                        <div class="no-subscriptions" style="grid-column: 1 / -1;">
+                            <div class="no-subscriptions-icon">⚠️</div>
+                            <h3>載入失敗</h3>
+                            <p>無法載入訂單資料，請稍後再試</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function renderOrders(orders) {
+            const subscriptionsList = document.getElementById('subscriptionsList');
+            
+            const productIcons = {
+                'youtube': 'youtube-premium.png',
+                'kkbox': 'kkbox.png',
+                'microsoft365': 'microsoft365.png'
+            };
+
+            const productNames = {
+                'youtube': 'YouTube Premium 家庭方案',
+                'kkbox': 'KKBOX 家庭方案',
+                'microsoft365': 'Microsoft 365 進階版'
+            };
+
+            const statusLabels = {
+                'pending': '待處理',
+                'paid': '已付款',
+                'processing': '處理中',
+                'completed': '已完成',
+                'cancelled': '已取消'
+            };
+
+            const html = orders.map(order => {
+                const productIcon = productIcons[order.product_type] || 'family-logo.png';
+                const productName = productNames[order.product_type] || order.product_type;
+                const statusLabel = statusLabels[order.status] || order.status;
+                const statusClass = `status-${order.status}`;
+                const orderDate = new Date(order.created_at).toLocaleString('zh-TW');
+                
+                let priceDisplay = `<span class="order-price-final">NT$ ${order.final_price}</span>`;
+                if (order.discount_amount > 0) {
+                    priceDisplay = `
+                        <span class="order-price-original">NT$ ${order.original_price}</span><br>
+                        <span class="order-price-final">NT$ ${order.final_price}</span>
+                    `;
+                }
+
+                return `
                     <div class="subscription-card">
                         <div class="subscription-header">
-                            <img src="${sub.icon}" alt="${sub.name}" class="subscription-icon">
-                            <div class="subscription-title">${sub.name}</div>
+                            <img src="${productIcon}" alt="${productName}" class="subscription-icon">
+                            <div class="subscription-title">${productName}</div>
                         </div>
-                        <span class="subscription-status status-active">使用中</span>
+                        <span class="subscription-status ${statusClass}">${statusLabel}</span>
                         <div class="subscription-details">
-                            <p>💰 每月 NT$ ${sub.price}</p>
-                            <p>👤 共享人數: ${sub.members} 人</p>
-                            <p>📅 下次扣款: ${sub.nextBilling}</p>
+                            <p>💰 價格: ${priceDisplay}</p>
+                            <p>📅 方案時長: ${order.plan_duration_months} 個月</p>
+                            <p>👤 子帳戶數: ${order.sub_accounts} 個</p>
+                            ${order.discount_code ? `<p>🎫 優惠碼: ${order.discount_code}</p>` : ''}
+                            <p class="order-date">📆 訂單日期: ${orderDate}</p>
+                            <p class="order-id">訂單編號: ${order.order_id}</p>
                         </div>
                     </div>
-                `).join('');
-            }
+                `;
+            }).join('');
+
+            subscriptionsList.innerHTML = html;
         }
 
         init();

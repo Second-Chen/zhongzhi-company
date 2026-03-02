@@ -325,7 +325,7 @@ app.post('/api/orders/create', async (req, res) => {
     }
 });
 
-// Get orders endpoint
+// Get orders endpoint (using token)
 app.get('/api/orders', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -343,6 +343,31 @@ app.get('/api/orders', async (req, res) => {
         const [rows] = await pool.execute(
             'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC',
             [userId]
+        );
+
+        res.json({
+            success: true,
+            orders: rows
+        });
+
+    } catch (error) {
+        console.error('Get orders error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// Get orders by user ID (using query param)
+app.get('/api/orders/by-user', async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '請提供用戶ID' });
+        }
+
+        const [rows] = await pool.execute(
+            'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+            [user_id]
         );
 
         res.json({
