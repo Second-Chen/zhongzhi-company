@@ -472,6 +472,167 @@
                 letter-spacing: 2px;
             }
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--primary);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-header .subtitle {
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .modal-body {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-row:last-child {
+            border-bottom: none;
+        }
+
+        .modal-label {
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .modal-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .modal-value.highlight {
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+
+        .coupon-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .coupon-input input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .coupon-input input:focus {
+            border-color: var(--accent);
+        }
+
+        .coupon-input button {
+            padding: 0.6rem 1rem;
+            background: var(--light);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .coupon-input button:hover {
+            background: #e9ecef;
+        }
+
+        .modal-footer {
+            margin-top: 1.5rem;
+        }
+
+        .modal-buy-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-buy-btn:hover {
+            background: #0769b5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(9, 132, 227, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -518,7 +679,7 @@
                     <li>📺 離線觀看影片</li>
                     <li>🎮 背景播放 YouTube 影片</li>
                 </ul>
-                <a href="#contact" class="pricing-btn">立即購買</a>
+                <a href="javascript:void(0)" class="pricing-btn" onclick="openModal('ytModal')">立即購買</a>
             </div>
             <div class="pricing-card featured">
                 <div class="pricing-badge">熱銷</div>
@@ -611,6 +772,38 @@
         </div>
     </section>
 
+    <!-- YouTube Premium Purchase Modal -->
+    <div class="modal-overlay" id="ytModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('ytModal')">&times;</button>
+            <div class="modal-header">
+                <h3>Youtube Premium 家庭方案</h3>
+                <div class="subtitle">確認購買資訊</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-row">
+                    <span class="modal-label">方案時長</span>
+                    <span class="modal-value">12 個月</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">用戶類型</span>
+                    <span class="modal-value">1 個子帳戶 (與5人共享)</span>
+                </div>
+                <div class="coupon-input">
+                    <input type="text" id="ytCouponCode" placeholder="輸入優惠碼">
+                    <button onclick="applyCoupon('yt')">套用</button>
+                </div>
+                <div class="modal-row" style="margin-top: 1rem;">
+                    <span class="modal-label">價格</span>
+                    <span class="modal-value highlight">NT$ 780</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-buy-btn" onclick="confirmPurchase('yt')">購買</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 家庭共享計畫. All rights reserved.</p>
     </footer>
@@ -654,6 +847,46 @@
 
         // Run on page load
         document.addEventListener('DOMContentLoaded', checkLoginStatus);
+
+        // Modal Functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        function applyCoupon(prefix) {
+            const input = document.getElementById(prefix + 'CouponCode');
+            const code = input.value.trim();
+            if (code) {
+                alert('優惠碼已套用: ' + code);
+            } else {
+                alert('請輸入優惠碼');
+            }
+        }
+
+        function confirmPurchase(prefix) {
+            alert('感謝您的購買！我們會盡快與您聯繫處理後續事項。');
+            closeModal(prefix + 'Modal');
+        }
     </script>
 </body>
 </html>
