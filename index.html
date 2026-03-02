@@ -652,6 +652,11 @@
                         <span class="icon">📋</span>
                         我的訂閱
                     </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="javascript:void(0)" onclick="logout()">
+                        <span class="icon">🚪</span>
+                        登出
+                    </a>
                 </div>
             </div>
         </nav>
@@ -876,6 +881,11 @@
         function toggleDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
         }
 
         // Close dropdown when clicking outside
