@@ -964,6 +964,13 @@
                 return;
             }
 
+            // Product mapping
+            const productMap = {
+                'yt': 'youtube',
+                'kkbox': 'kkbox',
+                'microsoft365': 'microsoft365'
+            };
+
             // Call API to validate coupon
             const token = localStorage.getItem('token');
             const headers = {};
@@ -971,7 +978,7 @@
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            fetch(`/api/coupon/validate?code=${code}&product=${prefix}`, { headers })
+            fetch(`/api/coupon/validate?code=${code}&product=${productMap[prefix]}`, { headers })
                 .then(res => res.json())
                 .then(data => {
                     if (data.valid) {
