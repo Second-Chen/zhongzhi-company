@@ -273,7 +273,7 @@ app.post('/api/coupon/use', async (req, res) => {
 // Create order endpoint
 app.post('/api/orders/create', async (req, res) => {
     try {
-        const { product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, final_price, payment_method, notes } = req.body;
+        const { user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, final_price, payment_method, notes } = req.body;
 
         if (!product_type || !plan_duration_months || !original_price || !final_price) {
             return res.status(400).json({ success: false, message: '請填寫必要欄位' });
@@ -282,18 +282,21 @@ app.post('/api/orders/create', async (req, res) => {
         // Generate order ID
         const orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase();
 
-        // Get user ID from token if available
-        let userId = null;
-        const authHeader = req.headers.authorization;
-        if (authHeader) {
-            try {
-                const token = Buffer.from(authHeader.split(' ')[1], 'base64').toString();
-                const userIdFromToken = parseInt(token.split(':')[0]);
-                if (!isNaN(userIdFromToken)) {
-                    userId = userIdFromToken;
+        // Use user_id from request body (sent from frontend from localStorage)
+        // If not provided, try to get from token
+        let userId = user_id;
+        if (!userId) {
+            const authHeader = req.headers.authorization;
+            if (authHeader) {
+                try {
+                    const token = Buffer.from(authHeader.split(' ')[1], 'base64').toString();
+                    const userIdFromToken = parseInt(token.split(':')[0]);
+                    if (!isNaN(userIdFromToken)) {
+                        userId = userIdFromToken;
+                    }
+                } catch (e) {
+                    // Invalid token, continue without user
                 }
-            } catch (e) {
-                // Invalid token, continue without user
             }
         }
 
