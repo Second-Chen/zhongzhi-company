@@ -273,7 +273,7 @@ app.post('/api/coupon/use', async (req, res) => {
 // Create order endpoint
 app.post('/api/orders/create', async (req, res) => {
     try {
-        const { product_type, plan_duration_months, sub_accounts, original_price, coupon_code, discount_amount, final_price, payment_method, notes } = req.body;
+        const { product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, final_price, payment_method, notes } = req.body;
 
         if (!product_type || !plan_duration_months || !original_price || !final_price) {
             return res.status(400).json({ success: false, message: '請填寫必要欄位' });
@@ -299,9 +299,9 @@ app.post('/api/orders/create', async (req, res) => {
 
         // Insert order
         const [result] = await pool.execute(
-            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, coupon_code, discount_amount, final_price, payment_method, notes)
+            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, final_price, payment_method, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, coupon_code || null, discount_amount || 0, final_price, payment_method || null, notes || null]
+            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, discount_code || null, discount_amount || 0, final_price, payment_method || null, notes || null]
         );
 
         res.json({
