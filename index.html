@@ -955,7 +955,13 @@
             }
 
             // Call API to validate coupon
-            fetch(`/api/coupon/validate?code=${code}&product=${prefix}`)
+            const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            fetch(`/api/coupon/validate?code=${code}&product=${prefix}`, { headers })
                 .then(res => res.json())
                 .then(data => {
                     if (data.valid) {
@@ -989,6 +995,13 @@
             const input = document.getElementById(prefix + 'CouponCode');
             const code = input.value.trim();
             
+            // Check if user is logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                alert('請先登入會員再進行購買');
+                return;
+            }
+
             // Get price info
             const priceElement = document.getElementById(prefix + 'Price');
             let originalPrice = prefix === 'yt' ? 780 : (prefix === 'kkbox' ? 780 : 1788);
@@ -1034,9 +1047,15 @@
             };
 
             // Send order to server
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             fetch('/api/orders/create', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify(orderData)
             })
             .then(res => res.json())
