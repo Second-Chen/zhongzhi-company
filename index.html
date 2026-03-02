@@ -1034,7 +1034,11 @@
             };
 
             // Create order data
+            // Get userId directly from localStorage
+            const userIdFromStorage = localStorage.getItem('userId');
+            
             const orderData = {
+                user_id: userIdFromStorage ? parseInt(userIdFromStorage) : null,
                 product_type: productMap[prefix],
                 plan_duration_months: 12,
                 sub_accounts: 1,
