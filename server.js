@@ -183,6 +183,93 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Validate coupon code endpoint
+app.get('/api/coupon/validate', async (req, res) => {
+    try {
+        const { code, product } = req.query;
+
+        if (!code) {
+            return res.status(400).json({ valid: false, message: '請輸入折扣碼' });
+        }
+
+        // Query coupon from database
+        const [rows] = await pool.execute(
+            'SELECT * FROM discount_codes WHERE code = ?',
+            [code.toUpperCase()]
+        );
+
+        if (rows.length === 0) {
+            return res.json({ valid: false, message: '折扣碼不存在' });
+        }
+
+        const coupon = rows[0];
+
+        // Check if coupon is active
+        if (!coupon.is_active) {
+            return res.json({ valid: false, message: '此折扣碼已停用' });
+        }
+
+        // Check if coupon has not expired
+        const now = new Date();
+        if (now < new Date(coupon.valid_from) || now > new Date(coupon.valid_until)) {
+            return res.json({ valid: false, message: '此折扣碼已過期' });
+        }
+
+        // Check usage limit
+        if (coupon.max_uses !== null && coupon.current_uses >= coupon.max_uses) {
+            return res.json({ valid: false, message: '此折扣碼已達使用上限' });
+        }
+
+        // Check applicable products
+        if (coupon.applicable_products !== 'all' && coupon.applicable_products !== product && product) {
+            return res.json({ valid: false, message: '此折扣碼不適用於此產品' });
+        }
+
+        // Return valid coupon data
+        res.json({
+            valid: true,
+            message: '折扣碼套用成功',
+            coupon: {
+                code: coupon.code,
+                discount_type: coupon.discount_type,
+                discount_value: parseFloat(coupon.discount_value),
+                min_purchase_amount: parseFloat(coupon.min_purchase_amount)
+            }
+        });
+
+    } catch (error) {
+        console.error('Coupon validation error:', error);
+        res.status(500).json({ valid: false, message: '伺服器錯誤' });
+    }
+});
+
+// Increment coupon usage endpoint
+app.post('/api/coupon/use', async (req, res) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ success: false, message: '請輸入折扣碼' });
+        }
+
+        // Increment usage
+        const [result] = await pool.execute(
+            'UPDATE discount_codes SET current_uses = current_uses + 1 WHERE code = ?',
+            [code.toUpperCase()]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.json({ success: false, message: '折扣碼不存在' });
+        }
+
+        res.json({ success: true, message: '使用次數已更新' });
+
+    } catch (error) {
+        console.error('Coupon usage error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

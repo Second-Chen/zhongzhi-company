@@ -795,7 +795,7 @@
                 </div>
                 <div class="modal-row" style="margin-top: 1rem;">
                     <span class="modal-label">價格</span>
-                    <span class="modal-value highlight">NT$ 780</span>
+                    <span class="modal-value highlight" id="ytPrice">NT$ 780</span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -876,14 +876,58 @@
         function applyCoupon(prefix) {
             const input = document.getElementById(prefix + 'CouponCode');
             const code = input.value.trim();
-            if (code) {
-                alert('優惠碼已套用: ' + code);
-            } else {
+            const priceElement = document.getElementById(prefix + 'Price');
+            const originalPrice = prefix === 'yt' ? 780 : (prefix === 'kkbox' ? 780 : 1788);
+            
+            if (!code) {
                 alert('請輸入優惠碼');
+                return;
             }
+
+            // Call API to validate coupon
+            fetch(`/api/coupon/validate?code=${code}&product=${prefix}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.valid) {
+                        const coupon = data.coupon;
+                        let finalPrice = originalPrice;
+
+                        if (coupon.discount_type === 'fixed') {
+                            finalPrice = originalPrice - coupon.discount_value;
+                        } else if (coupon.discount_type === 'percentage') {
+                            finalPrice = originalPrice * (1 - coupon.discount_value / 100);
+                        }
+
+                        // Ensure price doesn't go below 0
+                        finalPrice = Math.max(0, finalPrice);
+
+                        // Show original price and discounted price
+                        priceElement.innerHTML = `<span style="text-decoration: line-through; color: #999; font-size: 0.9rem;">NT$ ${originalPrice}</span> <span style="color: #e74c3c; font-weight: bold;">NT$ ${finalPrice}</span>`;
+                        
+                        alert(data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('折扣碼驗證失敗，請稍後再試');
+                });
         }
 
         function confirmPurchase(prefix) {
+            const input = document.getElementById(prefix + 'CouponCode');
+            const code = input.value.trim();
+            
+            // If coupon was applied, increment usage
+            if (code) {
+                fetch('/api/coupon/use', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                }).then(res => res.json()).catch(err => console.error('Error:', err));
+            }
+            
             alert('感謝您的購買！我們會盡快與您聯繫處理後續事項。');
             closeModal(prefix + 'Modal');
         }
