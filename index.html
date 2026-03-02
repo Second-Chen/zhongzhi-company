@@ -1004,27 +1004,44 @@
 
             // Get price info
             const priceElement = document.getElementById(prefix + 'Price');
-            let originalPrice = prefix === 'yt' ? 780 : (prefix === 'kkbox' ? 780 : 1788);
+            const originalPriceMap = {
+                'yt': 780,
+                'kkbox': 780,
+                'microsoft365': 1788
+            };
+            const originalPrice = originalPriceMap[prefix];
             let finalPrice = originalPrice;
             let discountAmount = 0;
-            let couponCode = code || null;
+            let couponCode = null;
 
-            // If coupon was applied, calculate discount
-            if (code && priceElement.innerHTML.includes('line-through')) {
-                // Parse the discounted price
-                const match = priceElement.innerHTML.match(/NT\$\s*(\d+)/);
-                if (match) {
-                    finalPrice = parseInt(match[1]);
+            // If coupon was applied (price shows discounted)
+            if (code) {
+                couponCode = code;
+                // Check if there's a discounted price displayed (contains red color or line-through)
+                const discountedSpan = priceElement.querySelector('span[style*="color: #e74c3c"]') || priceElement.querySelector('span:last-child');
+                if (discountedSpan) {
+                    const priceText = discountedSpan.textContent.replace(/[^\d]/g, '');
+                    finalPrice = parseInt(priceText) || originalPrice;
                     discountAmount = originalPrice - finalPrice;
-                }
 
-                // Increment coupon usage
-                fetch('/api/coupon/use', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code })
-                }).catch(err => console.error('Error:', err));
+                    // Increment coupon usage when actually purchasing
+                    fetch('/api/coupon/use', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: code })
+                    }).catch(err => console.error('Error:', err));
+                }
             }
+
+            // Debug log
+            console.log('Purchase debug:', {
+                code: code,
+                couponCode: couponCode,
+                originalPrice: originalPrice,
+                finalPrice: finalPrice,
+                discountAmount: discountAmount,
+                userId: localStorage.getItem('userId')
+            });
 
             // Product mapping
             const productMap = {
@@ -1034,11 +1051,11 @@
             };
 
             // Create order data
-            // Get userId directly from localStorage
-            const userIdFromStorage = localStorage.getItem('userId');
+            const userIdStr = localStorage.getItem('userId');
+            const userId = userIdStr ? parseInt(userIdStr) : null;
             
             const orderData = {
-                user_id: userIdFromStorage ? parseInt(userIdFromStorage) : null,
+                user_id: userId,
                 product_type: productMap[prefix],
                 plan_duration_months: 12,
                 sub_accounts: 1,
@@ -1050,20 +1067,18 @@
                 notes: ''
             };
 
-            // Send order to server
-            const token = localStorage.getItem('token');
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            // Debug log order data
+            console.log('Order data:', orderData);
 
+            // Send order to server
             fetch('/api/orders/create', {
                 method: 'POST',
-                headers: headers,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)
             })
             .then(res => res.json())
             .then(data => {
+                console.log('Order response:', data);
                 if (data.success) {
                     alert(`感謝您的購買！\n訂單編號：${data.order_id}\n金額：NT$ ${finalPrice}\n\n我們會盡快與您聯繫處理後續事項。`);
                     closeModal(prefix + 'Modal');
