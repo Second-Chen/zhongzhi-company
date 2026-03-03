@@ -115,6 +115,7 @@
             text-align: center;
             text-decoration: none;
             transition: all 0.3s;
+            margin-bottom: 1rem;
         }
 
         .apple-login-btn:hover {
@@ -262,6 +263,11 @@
             <p>會員登入</p>
         </div>
 
+        <!-- LINE Login (移到最上方) -->
+        <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2009276934&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fcallback.html&state=STATE&scope=openid%20profile%20email" class="line-login-btn">
+            📱 使用 LINE 登入
+        </a>
+
         <!-- Apple Sign In -->
         <a href="javascript:void(0)" class="apple-login-btn" onclick="appleSignIn()">
             🍎 使用 Apple ID 登入
@@ -275,11 +281,6 @@
         <div class="login-divider">
             <span>或</span>
         </div>
-
-        <!-- LINE Login -->
-        <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2009276934&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fcallback.html&state=STATE&scope=openid%20profile%20email" class="line-login-btn">
-            📱 使用 LINE 登入
-        </a>
 
         <!-- Email Login Toggle -->
         <div class="email-login-section">
