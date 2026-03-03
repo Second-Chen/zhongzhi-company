@@ -268,7 +268,7 @@
         </a>
 
         <!-- Google Login -->
-        <a href="https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fgoogle-callback.html&response_type=code&scope=openid%20email%20profile" class="google-login-btn" id="googleLoginBtn">
+        <a href="#" class="google-login-btn" id="googleLoginBtn" onclick="googleLogin()">
             🔵 使用 Google 帳號 登入
         </a>
 
@@ -348,8 +348,27 @@
         function appleSignIn() {
             // Apple Sign In would require registering with Apple Developer
             // For now, redirect to email login as alternative
-            alert('Apple ID 登入功能敬請期待！\n\n目前支援 LINE 登入和 Email/密碼 登入。');
+            alert('Apple ID 登入功能敬請期待！\n\n目前支援 Google 登入和 Email/密碼 登入。');
             document.getElementById('emailLoginForm').classList.add('active');
+        }
+
+        function googleLogin() {
+            // Fetch Google Client ID from server and redirect
+            fetch('/api/config/google-client-id')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.clientId) {
+                        const redirectUri = encodeURIComponent('https://familyshare.online/google-callback.html');
+                        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${data.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile`;
+                        window.location.href = googleAuthUrl;
+                    } else {
+                        alert('Google 登入尚未設定');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('無法載入 Google 登入設定');
+                });
         }
 
         async function handleEmailLogin(event) {

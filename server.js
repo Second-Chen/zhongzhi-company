@@ -187,9 +187,14 @@ app.post('/api/google-callback', async (req, res) => {
             return res.status(400).json({ success: false, message: '缺少授權碼' });
         }
 
-        // Note: Replace with your actual Google OAuth credentials
-        const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
-        const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_GOOGLE_CLIENT_SECRET';
+        // Google OAuth credentials from environment variables
+        const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+        const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+        
+        if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+            return res.status(500).json({ success: false, message: 'Google OAuth 未設定' });
+        }
+        
         const GOOGLE_REDIRECT_URI = 'https://familyshare.online/google-callback.html';
 
         // Exchange code for tokens
@@ -285,6 +290,12 @@ app.post('/api/google-callback', async (req, res) => {
         console.error('Google callback error:', error);
         res.status(500).json({ success: false, message: '伺服器錯誤' });
     }
+});
+
+// Config endpoint - public config
+app.get('/api/config/google-client-id', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    res.json({ clientId: clientId || null });
 });
 
 // Serve index.html for root path
