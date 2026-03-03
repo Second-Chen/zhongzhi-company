@@ -118,6 +118,13 @@ app.post('/api/line-callback', async (req, res) => {
     try {
         const { line_user_id, line_display_name, line_picture_url, line_email, access_token, refresh_token, expires_in } = req.body;
 
+        console.log('LINE callback received:', {
+            line_user_id,
+            line_display_name,
+            line_email,
+            has_access_token: !!access_token
+        });
+
         if (!line_user_id) {
             return res.status(400).json({ message: '缺少 LINE 用戶資料' });
         }
