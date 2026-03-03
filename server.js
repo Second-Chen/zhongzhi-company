@@ -178,6 +178,115 @@ app.post('/api/line-callback', async (req, res) => {
     }
 });
 
+// Google Login callback endpoint
+app.post('/api/google-callback', async (req, res) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ success: false, message: '缺少授權碼' });
+        }
+
+        // Note: Replace with your actual Google OAuth credentials
+        const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+        const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_GOOGLE_CLIENT_SECRET';
+        const GOOGLE_REDIRECT_URI = 'https://familyshare.online/google-callback.html';
+
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                code: code,
+                client_id: GOOGLE_CLIENT_ID,
+                client_secret: GOOGLE_CLIENT_SECRET,
+                redirect_uri: GOOGLE_REDIRECT_URI,
+                grant_type: 'authorization_code'
+            })
+        });
+
+        const tokenData = await tokenResponse.json();
+
+        if (!tokenData.access_token) {
+            return res.status(400).json({ success: false, message: '無法取得 access token' });
+        }
+
+        // Get user info from Google
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+        });
+
+        const googleUser = await userInfoResponse.json();
+
+        if (!googleUser.id) {
+            return res.status(400).json({ success: false, message: '無法取得用戶資料' });
+        }
+
+        // Calculate token expiration (default 1 hour for Google)
+        const tokenExpiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
+
+        // Check if user exists
+        const [existingUser] = await pool.execute(
+            'SELECT * FROM users WHERE google_user_id = ?',
+            [googleUser.id]
+        );
+
+        if (existingUser.length > 0) {
+            // Update existing user
+            await pool.execute(
+                `UPDATE users SET 
+                    google_display_name = ?,
+                    google_email = ?,
+                    google_access_token = ?,
+                    google_refresh_token = ?,
+                    google_token_expires_at = ?,
+                    login_method = 'google',
+                    last_login_at = NOW()
+                WHERE google_user_id = ?`,
+                [googleUser.name, googleUser.email, tokenData.access_token, tokenData.refresh_token, tokenExpiresAt, googleUser.id]
+            );
+
+            res.json({
+                success: true,
+                message: '登入成功',
+                user: {
+                    id: existingUser[0].user_id,
+                    username: existingUser[0].username,
+                    google_display_name: googleUser.name,
+                    google_email: googleUser.email,
+                    picture: googleUser.picture
+                }
+            });
+        } else {
+            // Create new user
+            const username = googleUser.name || 'google_user_' + googleUser.id.slice(0, 8);
+            const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+
+            const [result] = await pool.execute(
+                `INSERT INTO users (username, password_hash, email, google_user_id, google_display_name, google_email, google_access_token, google_refresh_token, google_token_expires_at, login_method)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'google')`,
+                [username, defaultPassword, googleUser.email || '', googleUser.id, googleUser.name, googleUser.email, tokenData.access_token, tokenData.refresh_token, tokenExpiresAt]
+            );
+
+            res.json({
+                success: true,
+                message: '註冊並登入成功',
+                user: {
+                    id: result.insertId,
+                    username: username,
+                    google_display_name: googleUser.name,
+                    google_email: googleUser.email,
+                    picture: googleUser.picture
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Google callback error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 // Serve index.html for root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

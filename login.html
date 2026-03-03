@@ -123,6 +123,29 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
+        .google-login-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .google-login-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
         .email-login-section {
             margin-top: 1.5rem;
         }
@@ -242,6 +265,11 @@
         <!-- Apple Sign In -->
         <a href="javascript:void(0)" class="apple-login-btn" onclick="appleSignIn()">
             🍎 使用 Apple ID 登入
+        </a>
+
+        <!-- Google Login -->
+        <a href="https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_GOOGLE_CLIENT_ID&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fgoogle-callback.html&response_type=code&scope=openid%20email%20profile&state=STATE" class="google-login-btn" id="googleLoginBtn">
+            🔵 使用 Google 帳號 登入
         </a>
 
         <div class="login-divider">

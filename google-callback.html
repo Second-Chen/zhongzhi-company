@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google 登入中... - 家庭共享計畫</title>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f8f9fa;
+        }
+        .loading {
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>正在處理 Google 登入...</p>
+    </div>
+
+    <script>
+        // Get authorization code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+
+        if (error) {
+            alert('Google 登入失敗：' + error);
+            window.location.href = 'login.html';
+        } else if (code) {
+            // Exchange code for tokens
+            fetch('/api/google-callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Store user info
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('google_displayName', data.user.google_display_name);
+                    localStorage.setItem('google_email', data.user.google_email);
+                    localStorage.setItem('google_pictureUrl', data.user.picture);
+                    localStorage.setItem('loginMethod', 'google');
+                    
+                    // Redirect to home
+                    window.location.href = 'index.html';
+                } else {
+                    alert('登入失敗：' + data.message);
+                    window.location.href = 'login.html';
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('登入發生錯誤，請重試');
+                window.location.href = 'login.html';
+            });
+        } else {
+            // No code, redirect to login
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
