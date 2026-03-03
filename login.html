@@ -408,7 +408,7 @@
                     if (data.clientId) {
                         const redirectUri = encodeURIComponent('https://familyshare.online/kkid-callback.html');
                         // KKBOX OAuth authorization endpoint
-                        const kkboxAuthUrl = `https://account.kkbox.com/authorize?client_id=${data.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=user_info`;
+                        const kkboxAuthUrl = `https://oauth.kkbox.com/authorize?client_id=${data.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=user_info`;
                         window.location.href = kkboxAuthUrl;
                     } else {
                         alert('KKID 登入尚未設定');

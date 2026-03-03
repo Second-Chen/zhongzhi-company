@@ -323,7 +323,7 @@ app.post('/api/kkid-callback', async (req, res) => {
         const KKBOX_REDIRECT_URI = 'https://familyshare.online/kkid-callback.html';
 
         // Exchange code for tokens - using correct KKBOX OAuth endpoint
-        const tokenResponse = await fetch('https://account.kkbox.com/oauth2/token', {
+        const tokenResponse = await fetch('https://oauth.kkbox.com/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
