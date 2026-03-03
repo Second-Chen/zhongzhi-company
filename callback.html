@@ -71,6 +71,8 @@
             })
             .then(response => response.json())
             .then(async data => {
+                console.log('LINE token response:', JSON.stringify(data));
+                
                 if (data.access_token) {
                     // Get user profile
                     const profileResponse = await fetch('https://api.line.me/v2/profile', {
@@ -79,24 +81,31 @@
                         }
                     });
                     const userProfile = await profileResponse.json();
+                    console.log('LINE profile response:', JSON.stringify(userProfile));
 
-                    // Get user email (if scope includes email)
+                    // Get user email
                     let lineEmail = '';
-                    try {
-                        // Try v2/profile first (legacy but might work)
-                        const profileResponse = await fetch('https://api.line.me/v2/profile', {
-                            headers: {
-                                'Authorization': 'Bearer ' + data.access_token
+                    
+                    // Try to get email from id_token if available
+                    if (data.id_token) {
+                        try {
+                            // Decode id_token to get email claim (base64 encoded JSON)
+                            const idTokenParts = data.id_token.split('.');
+                            if (idTokenParts.length >= 2) {
+                                const payload = JSON.parse(atob(idTokenParts[1]));
+                                console.log('ID Token payload:', JSON.stringify(payload));
+                                if (payload.email) {
+                                    lineEmail = payload.email;
+                                }
                             }
-                        });
-                        const profileData = await profileResponse.json();
-                        console.log('LINE profile response:', JSON.stringify(profileData));
-                        
-                        // Check if email is in profile response
-                        if (profileData.email) {
-                            lineEmail = profileData.email;
-                        } else {
-                            // Try v2/userinfo
+                        } catch (e) {
+                            console.log('Failed to parse id_token:', e);
+                        }
+                    }
+                    
+                    // If no email from id_token, try API
+                    if (!lineEmail) {
+                        try {
                             const emailResponse = await fetch('https://api.line.me/v2/userinfo', {
                                 headers: {
                                     'Authorization': 'Bearer ' + data.access_token
@@ -105,13 +114,9 @@
                             const emailData = await emailResponse.json();
                             console.log('LINE userinfo response:', JSON.stringify(emailData));
                             lineEmail = emailData.email || '';
+                        } catch (e) {
+                            console.log('Email API error:', e);
                         }
-                        
-                        if (!lineEmail) {
-                            console.log('LINE email not available in response');
-                        }
-                    } catch (e) {
-                        console.log('Email not available:', e);
                     }
 
                     console.log('LINE email collected:', lineEmail);
