@@ -55,6 +55,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: '帳號或密碼錯誤' });
         }
 
+        // Update last login time
+        await pool.execute(
+            'UPDATE users SET last_login_at = NOW() WHERE user_id = ?',
+            [user.user_id]
+        );
+
         // Generate simple token (in production, use JWT)
         const token = Buffer.from(`${user.user_id}:${username}`).toString('base64');
 
