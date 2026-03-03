@@ -375,7 +375,26 @@ app.post('/api/kkid-callback', async (req, res) => {
 
         const kkid_user_id = kkboxUser.id;
         const display_name = kkboxUser.name;
-        const email = kkboxUser.email;
+        
+        // Try to get email from id_token if available, otherwise from user info
+        let email = kkboxUser.email;
+        if (!email && tokenData.id_token) {
+            try {
+                // Decode id_token to get email claim
+                const idTokenParts = tokenData.id_token.split('.');
+                if (idTokenParts.length >= 2) {
+                    const payload = JSON.parse(Buffer.from(idTokenParts[1], 'base64').toString());
+                    console.log('KKBOX id_token payload:', payload);
+                    if (payload.email) {
+                        email = payload.email;
+                    }
+                }
+            } catch (e) {
+                console.log('Failed to parse KKBOX id_token:', e);
+            }
+        }
+
+        console.log('KKBOX email collected:', email);
 
         // Calculate token expiration
         const tokenExpiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
@@ -387,15 +406,16 @@ app.post('/api/kkid-callback', async (req, res) => {
         );
 
         if (existingUser.length > 0) {
-            // Update existing user
+            // Update existing user - save email to both kkid_email and email fields
             await pool.execute(
                 `UPDATE users SET 
                     kkid_display_name = ?,
                     kkid_email = ?,
+                    email = COALESCE(NULLIF(email, ''), ?),
                     login_method = 'kkid',
                     last_login_at = NOW()
                 WHERE kkid_user_id = ?`,
-                [display_name || null, email || null, kkid_user_id]
+                [display_name || null, email || null, email || null, kkid_user_id]
             );
 
             res.json({
