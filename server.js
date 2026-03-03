@@ -303,6 +303,72 @@ app.get('/api/config/google-client-id', (req, res) => {
     res.json({ clientId: clientId || null });
 });
 
+// KKID Login callback endpoint
+app.post('/api/kkid-callback', async (req, res) => {
+    try {
+        const { kkid_user_id, display_name, email } = req.body;
+
+        if (!kkid_user_id) {
+            return res.status(400).json({ success: false, message: '缺少 KKID 用戶資料' });
+        }
+
+        // Check if user exists
+        const [existingUser] = await pool.execute(
+            'SELECT * FROM users WHERE kkid_user_id = ?',
+            [kkid_user_id]
+        );
+
+        if (existingUser.length > 0) {
+            // Update existing user
+            await pool.execute(
+                `UPDATE users SET 
+                    kkid_display_name = ?,
+                    kkid_email = ?,
+                    login_method = 'kkid',
+                    last_login_at = NOW()
+                WHERE kkid_user_id = ?`,
+                [display_name || null, email || null, kkid_user_id]
+            );
+
+            res.json({
+                success: true,
+                message: '登入成功',
+                user: {
+                    id: existingUser[0].user_id,
+                    username: existingUser[0].username,
+                    kkid_display_name: display_name,
+                    kkid_email: email
+                }
+            });
+        } else {
+            // Create new user
+            const username = display_name || 'kkid_user_' + kkid_user_id.slice(0, 8);
+            const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+
+            const [result] = await pool.execute(
+                `INSERT INTO users (username, password_hash, email, kkid_user_id, kkid_display_name, kkid_email, login_method)
+                VALUES (?, ?, ?, ?, ?, ?, 'kkid')`,
+                [username, defaultPassword, email || '', kkid_user_id, display_name || null, email || null]
+            );
+
+            res.json({
+                success: true,
+                message: '註冊並登入成功',
+                user: {
+                    id: result.insertId,
+                    username: username,
+                    kkid_display_name: display_name,
+                    kkid_email: email
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('KKID callback error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤: ' + error.message });
+    }
+});
+
 // Serve index.html for root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
