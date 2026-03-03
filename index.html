@@ -464,12 +464,60 @@
                 display: none;
             }
 
+            .mobile-nav {
+                display: flex !important;
+            }
+
             .section {
                 padding: 4rem 5%;
             }
 
             .hero h1 {
                 letter-spacing: 2px;
+            }
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 1001;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        .mobile-nav.show {
+            display: flex;
+        }
+
+        .mobile-nav a {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+        }
+
+        .mobile-nav a:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
             }
         }
 
@@ -638,6 +686,7 @@
 <body>
     <header>
         <div class="logo"><img src="family-logo.png" alt="Logo" style="height: 60px; vertical-align: middle; margin-right: 10px;">家庭共享計畫</div>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
         <nav>
             <a href="#subscriptions">訂閱項目</a>
             <a href="#about">關於計畫</a>
@@ -661,6 +710,14 @@
             </div>
         </nav>
     </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="#subscriptions">訂閱項目</a>
+        <a href="#about">關於計畫</a>
+        <a href="#contact">聯絡我們</a>
+        <a href="login.html" class="login-btn" id="mobileLoginBtn">登入</a>
+    </div>
 
     <!-- Subscription Plans Section -->
     <section id="subscriptions" class="section subscriptions">
@@ -881,6 +938,11 @@
         function toggleDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
+        }
+
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('show');
         }
 
         function logout() {
