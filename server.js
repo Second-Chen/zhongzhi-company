@@ -253,7 +253,7 @@ app.post('/api/google-callback', async (req, res) => {
                     login_method = 'google',
                     last_login_at = NOW()
                 WHERE google_user_id = ?`,
-                [googleUser.name, googleUser.email, tokenData.access_token, tokenData.refresh_token, tokenExpiresAt, googleUser.id]
+                [googleUser.name || null, googleUser.email || null, tokenData.access_token, tokenData.refresh_token || null, tokenExpiresAt, googleUser.id]
             );
 
             res.json({
@@ -275,7 +275,7 @@ app.post('/api/google-callback', async (req, res) => {
             const [result] = await pool.execute(
                 `INSERT INTO users (username, password_hash, email, google_user_id, google_display_name, google_email, google_access_token, google_refresh_token, google_token_expires_at, login_method)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'google')`,
-                [username, defaultPassword, googleUser.email || '', googleUser.id, googleUser.name, googleUser.email, tokenData.access_token, tokenData.refresh_token, tokenExpiresAt]
+                [username, defaultPassword, googleUser.email || '', googleUser.id, googleUser.name || null, googleUser.email || null, tokenData.access_token, tokenData.refresh_token || null, tokenExpiresAt]
             );
 
             res.json({
