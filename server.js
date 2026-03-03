@@ -394,7 +394,7 @@ app.post('/api/kkid-callback', async (req, res) => {
             });
         } else {
             // Create new user
-            const username = display_name || 'kkid_user_' + kkid_user_id.slice(0, 8);
+            const username = (display_name || 'kkid_user_' + kkid_user_id.slice(0, 8)) + '_' + Math.random().toString(36).substring(2, 6);
             const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
 
             const [result] = await pool.execute(
