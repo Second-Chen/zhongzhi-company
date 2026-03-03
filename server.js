@@ -323,7 +323,7 @@ app.post('/api/kkid-callback', async (req, res) => {
         const KKBOX_REDIRECT_URI = 'https://familyshare.online/kkid-callback.html';
 
         // Exchange code for tokens - using correct KKBOX OAuth endpoint
-        const tokenResponse = await fetch('https://account.kkbox.com.tw/oauth2/token', {
+        const tokenResponse = await fetch('https://account.kkbox.com/oauth2/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
@@ -344,8 +344,8 @@ app.post('/api/kkid-callback', async (req, res) => {
             return res.status(400).json({ success: false, message: '無法取得 access token: ' + (tokenData.error_description || tokenData.error || 'Unknown error') });
         }
 
-        // Get user info from KKBOX
-        const userInfoResponse = await fetch('https://api.kkbox.com.tw/v1.1/me', {
+        // Get user info from KKBOX - using correct API host
+        const userInfoResponse = await fetch('https://api.kkbox.com/v1.1/me', {
             headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
         });
 
