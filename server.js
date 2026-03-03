@@ -132,19 +132,20 @@ app.post('/api/line-callback', async (req, res) => {
         );
 
         if (existingUser.length > 0) {
-            // Update existing user
+            // Update existing user - save email to both email and line_email fields
             await pool.execute(
                 `UPDATE users SET 
                     line_display_name = ?,
                     line_picture_url = ?,
                     line_email = ?,
+                    email = COALESCE(NULLIF(email, ''), ?),
                     line_access_token = ?,
                     line_refresh_token = ?,
                     line_token_expires_at = ?,
                     login_method = 'line',
                     last_login_at = NOW()
                 WHERE line_user_id = ?`,
-                [line_display_name, line_picture_url, line_email, access_token, refresh_token, tokenExpiresAt, line_user_id]
+                [line_display_name, line_picture_url, line_email, line_email, access_token, refresh_token, tokenExpiresAt, line_user_id]
             );
 
             res.json({
@@ -153,6 +154,7 @@ app.post('/api/line-callback', async (req, res) => {
                 user: {
                     id: existingUser[0].user_id,
                     username: existingUser[0].username,
+                    email: line_email || existingUser[0].email,
                     line_display_name
                 }
             });
@@ -173,6 +175,7 @@ app.post('/api/line-callback', async (req, res) => {
                 user: {
                     id: result.insertId,
                     username,
+                    email: line_email,
                     line_display_name
                 }
             });
