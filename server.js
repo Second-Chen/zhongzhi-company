@@ -692,11 +692,19 @@ async function sendVerificationEmail(email, token) {
     };
 
     try {
+        console.log('SMTP config:', {
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            user: process.env.SMTP_USER,
+            from: process.env.SMTP_FROM
+        });
+        
         await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully to:', email);
         return true;
     } catch (error) {
-        console.error('Email sending error:', error);
-        return false;
+        console.error('Email sending error:', error.message);
+        return { success: false, error: error.message };
     }
 }
 
@@ -736,12 +744,12 @@ app.post('/api/send-verification-email', async (req, res) => {
         );
 
         // Send verification email
-        const sent = await sendVerificationEmail(email, token);
+        const result = await sendVerificationEmail(email, token);
 
-        if (sent) {
+        if (result && result.success !== false) {
             res.json({ success: true, message: '驗證信已發送' });
         } else {
-            res.status(500).json({ success: false, message: '發送驗證信失敗' });
+            res.status(500).json({ success: false, message: '發送驗證信失敗: ' + (result?.error || '未知錯誤') });
         }
 
     } catch (error) {
