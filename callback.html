@@ -83,17 +83,23 @@
                     // Get user email (if scope includes email)
                     let lineEmail = '';
                     try {
-                        // LINE email endpoint
+                        // LINE email endpoint - v2/userinfo returns email when scope includes email
                         const emailResponse = await fetch('https://api.line.me/v2/userinfo', {
                             headers: {
                                 'Authorization': 'Bearer ' + data.access_token
                             }
                         });
                         const emailData = await emailResponse.json();
+                        console.log('LINE email response:', emailData);
                         lineEmail = emailData.email || '';
+                        if (!lineEmail && emailData.message) {
+                            console.log('LINE email error:', emailData.message);
+                        }
                     } catch (e) {
                         console.log('Email not available:', e);
                     }
+
+                    console.log('LINE email collected:', lineEmail);
 
                     // Send user data to server to save in database
                     const serverResponse = await fetch(`${API_URL}/api/line-callback`, {
