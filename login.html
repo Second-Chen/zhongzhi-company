@@ -276,6 +276,111 @@
         .back-link:hover {
             color: var(--accent);
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+                align-items: flex-start;
+                padding-top: 2rem;
+            }
+
+            .login-container {
+                padding: 1.5rem;
+                border-radius: 16px;
+                margin: 0 auto;
+            }
+
+            .login-header {
+                margin-bottom: 1.5rem;
+            }
+
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .login-header p {
+                font-size: 0.9rem;
+            }
+
+            .login-header img {
+                height: 50px !important;
+            }
+
+            .line-login-btn,
+            .apple-login-btn,
+            .google-login-btn,
+            .kkid-login-btn {
+                padding: 0.875rem;
+                font-size: 0.95rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .login-divider {
+                margin: 1rem 0;
+            }
+
+            .email-login-section {
+                margin-top: 1rem;
+            }
+
+            .email-login-toggle {
+                padding: 0.875rem;
+                font-size: 0.95rem;
+            }
+
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+
+            .form-group input {
+                padding: 0.625rem 0.875rem;
+                font-size: 0.95rem;
+            }
+
+            .submit-btn {
+                padding: 0.875rem;
+                font-size: 0.95rem;
+            }
+
+            .back-link {
+                margin-top: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .register-link {
+                font-size: 0.85rem;
+            }
+
+            .error-message {
+                font-size: 0.8rem;
+            }
+
+            .login-btn,
+            .logout-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 1.25rem;
+            }
+
+            .login-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .line-login-btn,
+            .apple-login-btn,
+            .google-login-btn,
+            .kkid-login-btn {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
