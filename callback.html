@@ -83,7 +83,8 @@
                     // Get user email (if scope includes email)
                     let lineEmail = '';
                     try {
-                        const emailResponse = await fetch('https://api.line.me/v2/oauth/verify', {
+                        // LINE email endpoint
+                        const emailResponse = await fetch('https://api.line.me/v2/userinfo', {
                             headers: {
                                 'Authorization': 'Bearer ' + data.access_token
                             }
@@ -91,7 +92,7 @@
                         const emailData = await emailResponse.json();
                         lineEmail = emailData.email || '';
                     } catch (e) {
-                        // Email not available
+                        console.log('Email not available:', e);
                     }
 
                     // Send user data to server to save in database
