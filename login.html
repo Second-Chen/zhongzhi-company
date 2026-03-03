@@ -58,6 +58,26 @@
             font-size: 0.95rem;
         }
 
+        .login-divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .login-divider span {
+            padding: 0 1rem;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
         .line-login-btn {
             display: block;
             width: 100%;
@@ -72,12 +92,129 @@
             text-align: center;
             text-decoration: none;
             transition: all 0.3s;
+            margin-bottom: 1rem;
         }
 
         .line-login-btn:hover {
             background: #05b04a;
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(6, 199, 85, 0.3);
+        }
+
+        .apple-login-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: #000000;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .apple-login-btn:hover {
+            background: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .email-login-section {
+            margin-top: 1.5rem;
+        }
+
+        .email-login-toggle {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: var(--light);
+            color: var(--primary);
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .email-login-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .email-login-form {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .email-login-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #0769b5;
+        }
+
+        .register-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .register-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
         }
 
         .back-link {
@@ -102,11 +239,164 @@
             <p>會員登入</p>
         </div>
 
+        <!-- Apple Sign In -->
+        <a href="javascript:void(0)" class="apple-login-btn" onclick="appleSignIn()">
+            🍎 使用 Apple ID 登入
+        </a>
+
+        <div class="login-divider">
+            <span>或</span>
+        </div>
+
+        <!-- LINE Login -->
         <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2009276934&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fcallback.html&state=STATE&scope=openid%20profile%20email" class="line-login-btn">
             📱 使用 LINE 登入
         </a>
 
+        <!-- Email Login Toggle -->
+        <div class="email-login-section">
+            <button class="email-login-toggle" onclick="toggleEmailLogin()">
+                ✉️ 使用 Email / 密碼 登入
+            </button>
+
+            <!-- Email Login Form -->
+            <form class="email-login-form" id="emailLoginForm" onsubmit="handleEmailLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="輸入您的 Email">
+                </div>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" required placeholder="輸入您的密碼">
+                </div>
+                <div class="error-message" id="loginError"></div>
+                <button type="submit" class="submit-btn">登入</button>
+                <a href="#" class="register-link" onclick="showRegister()">還沒有帳號？註冊</a>
+            </form>
+
+            <!-- Register Form -->
+            <form class="email-login-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="regUsername">用戶名</label>
+                    <input type="text" id="regUsername" name="username" required placeholder="設定用戶名">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" name="email" required placeholder="輸入您的 Email">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密碼</label>
+                    <input type="password" id="regPassword" name="password" required placeholder="設定密碼（至少6位）">
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">確認密碼</label>
+                    <input type="password" id="regConfirmPassword" name="confirmPassword" required placeholder="再次輸入密碼">
+                </div>
+                <div class="error-message" id="registerError"></div>
+                <button type="submit" class="submit-btn">註冊</button>
+                <a href="#" class="register-link" onclick="showLogin()">已有帳號？登入</a>
+            </form>
+        </div>
+
         <a href="index.html" class="back-link">← 返回首頁</a>
     </div>
+
+    <script>
+        function toggleEmailLogin() {
+            const form = document.getElementById('emailLoginForm');
+            form.classList.toggle('active');
+        }
+
+        function showRegister() {
+            document.getElementById('emailLoginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.add('active');
+        }
+
+        function showLogin() {
+            document.getElementById('registerForm').classList.remove('active');
+            document.getElementById('emailLoginForm').classList.add('active');
+        }
+
+        function appleSignIn() {
+            // Apple Sign In would require registering with Apple Developer
+            // For now, redirect to email login as alternative
+            alert('Apple ID 登入功能敬請期待！\n\n目前支援 LINE 登入和 Email/密碼 登入。');
+            document.getElementById('emailLoginForm').classList.add('active');
+        }
+
+        async function handleEmailLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: email, password: password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('email', data.user.email);
+                    localStorage.setItem('token', data.token);
+                    window.location.href = 'index.html';
+                } else {
+                    errorDiv.textContent = data.message;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = '登入失敗，請稍後再試';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const errorDiv = document.getElementById('registerError');
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = '密碼與確認密碼不一致';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = '密碼至少需要6個字元';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('註冊成功！請登入');
+                    showLogin();
+                } else {
+                    errorDiv.textContent = data.message;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = '註冊失敗，請稍後再試';
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>
