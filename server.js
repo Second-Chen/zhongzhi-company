@@ -639,6 +639,155 @@ app.get('/api/orders/by-user', async (req, res) => {
     }
 });
 
+// Email verification helper function
+async function sendVerificationEmail(email, token) {
+    const crypto = require('crypto');
+    const nodemailer = require('nodemailer');
+    
+    // Create transporter (configure with your SMTP settings)
+    // For now, we'll use a simple approach - in production, use real SMTP
+    const verifyUrl = `https://familyshare.online/verify-email.html?token=${token}`;
+    
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || 587,
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER || '',
+            pass: process.env.SMTP_PASS || ''
+        }
+    });
+
+    const mailOptions = {
+        from: process.env.SMTP_FROM || '"家庭共享計畫" <noreply@familyshare.online>',
+        to: email,
+        subject: '【家庭共享計畫】Email 驗證信',
+        html: `
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #0984e3;">家庭共享計畫</h1>
+                </div>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 10px;">
+                    <h2 style="color: #2d3436;">Email 驗證</h2>
+                    <p style="color: #636e72; line-height: 1.6;">
+                        您好，感謝您註冊家庭共享計畫！<br><br>
+                        請點擊以下連結進行 Email 驗證：
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verifyUrl}" style="display: inline-block; padding: 15px 30px; background: #0984e3; color: white; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                            驗證 Email
+                        </a>
+                    </div>
+                    <p style="color: #636e72; font-size: 14px;">
+                        如果無法點擊連結，請複製以下網址到瀏覽器開啟：<br>
+                        <span style="color: #0984e3; word-break: break-all;">${verifyUrl}</span>
+                    </p>
+                    <p style="color: #b2bec3; font-size: 12px; margin-top: 30px;">
+                        此驗證連結將在 24 小時後失效。<br>
+                        如果您沒有進行註冊，請忽略此郵件。
+                    </p>
+                </div>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        return true;
+    } catch (error) {
+        console.error('Email sending error:', error);
+        return false;
+    }
+}
+
+// Send verification email endpoint
+app.post('/api/send-verification-email', async (req, res) => {
+    try {
+        const { user_id } = req.body;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '請提供用戶ID' });
+        }
+
+        // Get user email
+        const [rows] = await pool.execute(
+            'SELECT email FROM users WHERE user_id = ?',
+            [user_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: '用戶不存在' });
+        }
+
+        const email = rows[0].email;
+        if (!email) {
+            return res.status(400).json({ success: false, message: '此帳號沒有綁定 Email' });
+        }
+
+        // Generate verification token
+        const crypto = require('crypto');
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        // Save token to database
+        await pool.execute(
+            'UPDATE users SET email_verify_token = ?, email_verify_expires = ? WHERE user_id = ?',
+            [token, expires, user_id]
+        );
+
+        // Send verification email
+        const sent = await sendVerificationEmail(email, token);
+
+        if (sent) {
+            res.json({ success: true, message: '驗證信已發送' });
+        } else {
+            res.status(500).json({ success: false, message: '發送驗證信失敗' });
+        }
+
+    } catch (error) {
+        console.error('Send verification email error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// Verify email endpoint
+app.get('/api/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            return res.status(400).json({ success: false, message: '缺少驗證碼' });
+        }
+
+        // Find user with this token
+        const [rows] = await pool.execute(
+            'SELECT user_id, email_verify_expires FROM users WHERE email_verify_token = ?',
+            [token]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: '驗證碼無效' });
+        }
+
+        // Check if token expired
+        if (new Date() > new Date(rows[0].email_verify_expires)) {
+            return res.status(400).json({ success: false, message: '驗證碼已過期，請重新發送' });
+        }
+
+        // Mark email as verified
+        await pool.execute(
+            'UPDATE users SET email_verified = 1, email_verify_token = NULL, email_verify_expires = NULL WHERE user_id = ?',
+            [rows[0].user_id]
+        );
+
+        res.json({ success: true, message: 'Email 驗證成功' });
+
+    } catch (error) {
+        console.error('Verify email error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

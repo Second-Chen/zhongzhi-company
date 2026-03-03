@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email 驗證中... - 家庭共享計畫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #2d3436;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: #636e72;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .success {
+            color: #00b894;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            background: #0984e3;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #0769b5;
+            transform: translateY(-2px);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0984e3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="result">
+        <div class="spinner"></div>
+        <h1>正在驗證 Email...</h1>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const API_URL = window.location.origin;
+
+        fetch(`${API_URL}/api/verify-email?token=${token}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('result');
+                if (data.success) {
+                    container.innerHTML = `
+                        <div class="icon">✅</div>
+                        <h1 class="success">驗證成功！</h1>
+                        <p>您的 Email 已經驗證完成，感謝您的使用。</p>
+                        <a href="index.html" class="btn">返回首頁</a>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="icon">❌</div>
+                        <h1 class="error">驗證失敗</h1>
+                        <p>${data.message}</p>
+                        <a href="index.html" class="btn">返回首頁</a>
+                    `;
+                }
+            })
+            .catch(err => {
+                const container = document.getElementById('result');
+                container.innerHTML = `
+                    <div class="icon">❌</div>
+                    <h1 class="error">驗證失敗</h1>
+                    <p>發生錯誤，請稍後再試</p>
+                    <a href="index.html" class="btn">返回首頁</a>
+                `;
+            });
+    </script>
+</body>
+</html>
