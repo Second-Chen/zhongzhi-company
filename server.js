@@ -212,8 +212,11 @@ app.post('/api/google-callback', async (req, res) => {
 
         const tokenData = await tokenResponse.json();
 
+        console.log('Google token response:', tokenData);
+
         if (!tokenData.access_token) {
-            return res.status(400).json({ success: false, message: '無法取得 access token' });
+            console.error('Token exchange failed:', tokenData);
+            return res.status(400).json({ success: false, message: '無法取得 access token: ' + (tokenData.error_description || tokenData.error || 'Unknown error') });
         }
 
         // Get user info from Google
@@ -222,6 +225,8 @@ app.post('/api/google-callback', async (req, res) => {
         });
 
         const googleUser = await userInfoResponse.json();
+
+        console.log('Google user info:', googleUser);
 
         if (!googleUser.id) {
             return res.status(400).json({ success: false, message: '無法取得用戶資料' });
@@ -288,7 +293,7 @@ app.post('/api/google-callback', async (req, res) => {
 
     } catch (error) {
         console.error('Google callback error:', error);
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
+        res.status(500).json({ success: false, message: '伺服器錯誤: ' + error.message });
     }
 });
 
