@@ -306,11 +306,63 @@ app.get('/api/config/google-client-id', (req, res) => {
 // KKID Login callback endpoint
 app.post('/api/kkid-callback', async (req, res) => {
     try {
-        const { kkid_user_id, display_name, email } = req.body;
+        const { code } = req.body;
 
-        if (!kkid_user_id) {
-            return res.status(400).json({ success: false, message: '缺少 KKID 用戶資料' });
+        if (!code) {
+            return res.status(400).json({ success: false, message: '缺少授權碼' });
         }
+
+        // KKBOX OAuth credentials from environment variables
+        const KKBOX_CLIENT_ID = process.env.KKBOX_CLIENT_ID;
+        const KKBOX_CLIENT_SECRET = process.env.KKBOX_CLIENT_SECRET;
+        
+        if (!KKBOX_CLIENT_ID || !KKBOX_CLIENT_SECRET) {
+            return res.status(500).json({ success: false, message: 'KKBOX OAuth 未設定' });
+        }
+        
+        const KKBOX_REDIRECT_URI = 'https://familyshare.online/kkid-callback.html';
+
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://api.kkbox.com.tw/oauth2/access_token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                client_id: KKBOX_CLIENT_ID,
+                client_secret: KKBOX_CLIENT_SECRET,
+                redirect_uri: KKBOX_REDIRECT_URI
+            })
+        });
+
+        const tokenData = await tokenResponse.json();
+
+        console.log('KKBOX token response:', tokenData);
+
+        if (!tokenData.access_token) {
+            console.error('Token exchange failed:', tokenData);
+            return res.status(400).json({ success: false, message: '無法取得 access token: ' + (tokenData.error_description || tokenData.error || 'Unknown error') });
+        }
+
+        // Get user info from KKBOX
+        const userInfoResponse = await fetch('https://api.kkbox.com.tw/v1.1/me', {
+            headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+        });
+
+        const kkboxUser = await userInfoResponse.json();
+
+        console.log('KKBOX user info:', kkboxUser);
+
+        if (!kkboxUser.id) {
+            return res.status(400).json({ success: false, message: '無法取得用戶資料' });
+        }
+
+        const kkid_user_id = kkboxUser.id;
+        const display_name = kkboxUser.name;
+        const email = kkboxUser.email;
+
+        // Calculate token expiration
+        const tokenExpiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
 
         // Check if user exists
         const [existingUser] = await pool.execute(
@@ -337,6 +389,43 @@ app.post('/api/kkid-callback', async (req, res) => {
                     id: existingUser[0].user_id,
                     username: existingUser[0].username,
                     kkid_display_name: display_name,
+                    kkid_email: email
+                }
+            });
+        } else {
+            // Create new user
+            const username = display_name || 'kkid_user_' + kkid_user_id.slice(0, 8);
+            const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+
+            const [result] = await pool.execute(
+                `INSERT INTO users (username, password_hash, email, kkid_user_id, kkid_display_name, kkid_email, login_method)
+                VALUES (?, ?, ?, ?, ?, ?, 'kkid')`,
+                [username, defaultPassword, email || '', kkid_user_id, display_name || null, email || null]
+            );
+
+            res.json({
+                success: true,
+                message: '註冊並登入成功',
+                user: {
+                    id: result.insertId,
+                    username: username,
+                    kkid_display_name: display_name,
+                    kkid_email: email
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('KKID callback error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤: ' + error.message });
+    }
+});
+
+// Config endpoint for KKBOX
+app.get('/api/config/kkbox-client-id', (req, res) => {
+    const clientId = process.env.KKBOX_CLIENT_ID;
+    res.json({ clientId: clientId || null });
+});
                     kkid_email: email
                 }
             });

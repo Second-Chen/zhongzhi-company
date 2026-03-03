@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KKID 登入中... - 家庭共享計畫</title>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #ff0066;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>正在處理 KKID 登入...</p>
+    </div>
+
+    <script>
+        // Get authorization code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        if (error) {
+            alert('KKID 登入失敗：' + error);
+            window.location.href = 'login.html';
+        } else if (code) {
+            // Exchange code for tokens
+            fetch('/api/kkid-callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Store user info
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('kkid_displayName', data.user.kkid_display_name);
+                    localStorage.setItem('kkid_email', data.user.kkid_email);
+                    localStorage.setItem('loginMethod', 'kkid');
+                    
+                    // Redirect to home
+                    window.location.href = 'index.html';
+                } else {
+                    alert('登入失敗：' + data.message);
+                    window.location.href = 'login.html';
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('登入發生錯誤，請重試');
+                window.location.href = 'login.html';
+            });
+        } else {
+            // No code, redirect to login
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

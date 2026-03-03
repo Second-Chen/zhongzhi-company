@@ -401,10 +401,22 @@
         }
 
         function kkidLogin() {
-            // KKID login would require KKBOX OAuth setup
-            // For now, redirect to email login as alternative
-            alert('KKID 登入功能敬請期待！\n\n目前支援 LINE、Google 和 Email/密碼 登入。');
-            document.getElementById('emailLoginForm').classList.add('active');
+            // Fetch KKBOX Client ID from server and redirect
+            fetch('/api/config/kkbox-client-id')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.clientId) {
+                        const redirectUri = encodeURIComponent('https://familyshare.online/kkid-callback.html');
+                        const kkboxAuthUrl = `https://api.kkbox.com.tw/oauth2/authorize?client_id=${data.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=`;
+                        window.location.href = kkboxAuthUrl;
+                    } else {
+                        alert('KKID 登入尚未設定');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('無法載入 KKID 登入設定');
+                });
         }
 
         async function handleEmailLogin(event) {
