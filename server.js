@@ -426,37 +426,6 @@ app.get('/api/config/kkbox-client-id', (req, res) => {
     const clientId = process.env.KKBOX_CLIENT_ID;
     res.json({ clientId: clientId || null });
 });
-                    kkid_email: email
-                }
-            });
-        } else {
-            // Create new user
-            const username = display_name || 'kkid_user_' + kkid_user_id.slice(0, 8);
-            const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
-
-            const [result] = await pool.execute(
-                `INSERT INTO users (username, password_hash, email, kkid_user_id, kkid_display_name, kkid_email, login_method)
-                VALUES (?, ?, ?, ?, ?, ?, 'kkid')`,
-                [username, defaultPassword, email || '', kkid_user_id, display_name || null, email || null]
-            );
-
-            res.json({
-                success: true,
-                message: '註冊並登入成功',
-                user: {
-                    id: result.insertId,
-                    username: username,
-                    kkid_display_name: display_name,
-                    kkid_email: email
-                }
-            });
-        }
-
-    } catch (error) {
-        console.error('KKID callback error:', error);
-        res.status(500).json({ success: false, message: '伺服器錯誤: ' + error.message });
-    }
-});
 
 // Serve index.html for root path
 app.get('/', (req, res) => {
