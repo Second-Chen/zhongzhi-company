@@ -90,7 +90,7 @@
                             }
                         });
                         const emailData = await emailResponse.json();
-                        console.log('LINE email response:', emailData);
+                        console.log('LINE email response:', JSON.stringify(emailData));
                         lineEmail = emailData.email || '';
                         if (!lineEmail && emailData.message) {
                             console.log('LINE email error:', emailData.message);
@@ -100,25 +100,30 @@
                     }
 
                     console.log('LINE email collected:', lineEmail);
+                    console.log('Sending to server - line_email:', lineEmail);
 
                     // Send user data to server to save in database
+                    const requestBody = {
+                        line_user_id: userProfile.userId,
+                        line_display_name: userProfile.displayName,
+                        line_picture_url: userProfile.pictureUrl,
+                        line_email: lineEmail,
+                        access_token: data.access_token,
+                        refresh_token: data.refresh_token,
+                        expires_in: data.expires_in
+                    };
+                    console.log('Request body:', JSON.stringify(requestBody));
+                    
                     const serverResponse = await fetch(`${API_URL}/api/line-callback`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            line_user_id: userProfile.userId,
-                            line_display_name: userProfile.displayName,
-                            line_picture_url: userProfile.pictureUrl,
-                            line_email: lineEmail,
-                            access_token: data.access_token,
-                            refresh_token: data.refresh_token,
-                            expires_in: data.expires_in
-                        })
+                        body: JSON.stringify(requestBody)
                     });
 
                     const serverData = await serverResponse.json();
+                    console.log('Server response:', JSON.stringify(serverData));
 
                     if (serverData.success) {
                         // Store user info in localStorage
