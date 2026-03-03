@@ -644,17 +644,31 @@ async function sendVerificationEmail(email, token) {
     const crypto = require('crypto');
     const nodemailer = require('nodemailer');
     
+    // Check SMTP configuration
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const smtpHost = process.env.SMTP_HOST;
+    
+    console.log('SMTP Config Check:');
+    console.log('- SMTP_HOST:', smtpHost || 'NOT SET');
+    console.log('- SMTP_USER:', smtpUser ? 'SET' : 'NOT SET');
+    console.log('- SMTP_PASS:', smtpPass ? 'SET (' + smtpPass.length + ' chars)' : 'NOT SET');
+    
+    if (!smtpUser || !smtpPass) {
+        console.error('SMTP_USER or SMTP_PASS not configured');
+        return { success: false, error: 'SMTP not configured' };
+    }
+    
     // Create transporter (configure with your SMTP settings)
-    // For now, we'll use a simple approach - in production, use real SMTP
     const verifyUrl = `https://familyshare.online/verify-email.html?token=${token}`;
     
     const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        host: smtpHost || 'smtp.gmail.com',
         port: process.env.SMTP_PORT || 587,
         secure: false,
         auth: {
-            user: process.env.SMTP_USER || '',
-            pass: process.env.SMTP_PASS || ''
+            user: smtpUser,
+            pass: smtpPass
         }
     });
 
