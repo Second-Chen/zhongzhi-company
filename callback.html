@@ -83,17 +83,32 @@
                     // Get user email (if scope includes email)
                     let lineEmail = '';
                     try {
-                        // LINE email endpoint - v2/userinfo returns email when scope includes email
-                        const emailResponse = await fetch('https://api.line.me/v2/userinfo', {
+                        // Try v2/profile first (legacy but might work)
+                        const profileResponse = await fetch('https://api.line.me/v2/profile', {
                             headers: {
                                 'Authorization': 'Bearer ' + data.access_token
                             }
                         });
-                        const emailData = await emailResponse.json();
-                        console.log('LINE email response:', JSON.stringify(emailData));
-                        lineEmail = emailData.email || '';
-                        if (!lineEmail && emailData.message) {
-                            console.log('LINE email error:', emailData.message);
+                        const profileData = await profileResponse.json();
+                        console.log('LINE profile response:', JSON.stringify(profileData));
+                        
+                        // Check if email is in profile response
+                        if (profileData.email) {
+                            lineEmail = profileData.email;
+                        } else {
+                            // Try v2/userinfo
+                            const emailResponse = await fetch('https://api.line.me/v2/userinfo', {
+                                headers: {
+                                    'Authorization': 'Bearer ' + data.access_token
+                                }
+                            });
+                            const emailData = await emailResponse.json();
+                            console.log('LINE userinfo response:', JSON.stringify(emailData));
+                            lineEmail = emailData.email || '';
+                        }
+                        
+                        if (!lineEmail) {
+                            console.log('LINE email not available in response');
                         }
                     } catch (e) {
                         console.log('Email not available:', e);
