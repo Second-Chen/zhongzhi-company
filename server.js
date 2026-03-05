@@ -27,6 +27,38 @@ const dbConfig = {
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
 
+// Helper function to generate random discount code (English + numbers, max 8 chars)
+function generateDiscountCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing chars like I, O, 0, 1
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+// Helper function to create referral discount code for new user
+async function createReferralCode(userId, username) {
+    const code = generateDiscountCode();
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1); // Valid for 1 year
+    
+    await pool.execute(
+        `INSERT INTO discount_codes (code, discount_type, discount_value, commission, valid_until, applicable_products, is_active)
+         VALUES (?, 'percentage', 5.00, 10.00, ?, 'all', 1)`,
+        [code, validUntil]
+    );
+    
+    // Get the inserted ID
+    const [rows] = await pool.execute('SELECT LAST_INSERT_ID() as id');
+    const discountCodeId = rows[0].id;
+    
+    // Update user with referral code ID
+    await pool.execute('UPDATE users SET referral_code_id = ? WHERE user_id = ?', [discountCodeId, userId]);
+    
+    return code;
+}
+
 // Login endpoint
 app.post('/api/login', async (req, res) => {
     try {
@@ -99,9 +131,13 @@ app.post('/api/register', async (req, res) => {
             [username, hashedPassword, email]
         );
 
+        // Create referral discount code for new user
+        const referralCode = await createReferralCode(result.insertId, username);
+
         res.json({
             success: true,
-            message: '註冊成功'
+            message: '註冊成功',
+            referralCode: referralCode
         });
 
     } catch (error) {
@@ -176,6 +212,9 @@ app.post('/api/line-callback', async (req, res) => {
                 [username, defaultPassword, line_email || '', line_user_id, line_display_name, line_picture_url, line_email, access_token, refresh_token, tokenExpiresAt]
             );
 
+            // Create referral discount code for new user
+            const referralCode = await createReferralCode(result.insertId, username);
+
             res.json({
                 success: true,
                 message: '註冊並登入成功',
@@ -184,7 +223,8 @@ app.post('/api/line-callback', async (req, res) => {
                     username,
                     email: line_email,
                     line_display_name
-                }
+                },
+                referralCode: referralCode
             });
         }
 
@@ -294,6 +334,9 @@ app.post('/api/google-callback', async (req, res) => {
                 [username, defaultPassword, googleUser.email || '', googleUser.id, googleUser.name || null, googleUser.email || null, tokenData.access_token, tokenData.refresh_token || null, tokenExpiresAt]
             );
 
+            // Create referral discount code for new user
+            const referralCode = await createReferralCode(result.insertId, username);
+
             res.json({
                 success: true,
                 message: '註冊並登入成功',
@@ -303,7 +346,8 @@ app.post('/api/google-callback', async (req, res) => {
                     google_display_name: googleUser.name,
                     google_email: googleUser.email,
                     picture: googleUser.picture
-                }
+                },
+                referralCode: referralCode
             });
         }
 
@@ -439,6 +483,9 @@ app.post('/api/kkid-callback', async (req, res) => {
                 [username, defaultPassword, email || '', kkid_user_id, display_name || null, email || null]
             );
 
+            // Create referral discount code for new user
+            const referralCode = await createReferralCode(result.insertId, username);
+
             res.json({
                 success: true,
                 message: '註冊並登入成功',
@@ -447,7 +494,9 @@ app.post('/api/kkid-callback', async (req, res) => {
                     username: username,
                     kkid_display_name: display_name,
                     kkid_email: email
-                }
+                },
+                referralCode: referralCode
+            });
             });
         }
 
@@ -585,11 +634,23 @@ app.post('/api/orders/create', async (req, res) => {
             }
         }
 
+        // If discount code is provided, get the commission
+        let commission = 0;
+        if (discount_code) {
+            const [codeRows] = await pool.execute(
+                'SELECT commission FROM discount_codes WHERE code = ?',
+                [discount_code]
+            );
+            if (codeRows.length > 0) {
+                commission = codeRows[0].commission || 0;
+            }
+        }
+
         // Insert order
         const [result] = await pool.execute(
-            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, final_price, payment_method, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, discount_code || null, discount_amount || 0, final_price, payment_method || null, notes || null]
+            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, commission, final_price, payment_method, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, discount_code || null, discount_amount || 0, commission, final_price, payment_method || null, notes || null]
         );
 
         res.json({
