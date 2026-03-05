@@ -454,7 +454,11 @@
                     </div>
                     <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
                         <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">信箱驗證</div>
-                        <div id="profileEmailVerified" style="font-weight: 500;">-</div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div id="profileEmailVerified" style="font-weight: 500;">-</div>
+                            <button id="sendVerifyBtn" onclick="sendVerificationEmail()" style="display: none; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #0984e3; color: white; border: none; border-radius: 4px; cursor: pointer;">發送驗證信</button>
+                        </div>
+                        <div id="verifyMessage" style="font-size: 0.8rem; margin-top: 0.5rem; color: #636e72;"></div>
                     </div>
                     <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
                         <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">登入方式</div>
@@ -550,6 +554,14 @@
                         document.getElementById('profileEmail').textContent = user.email || '-';
                         document.getElementById('profileEmailVerified').textContent = user.email_verified ? '✅ 已驗證' : '❌ 未驗證';
                         
+                        // Show send verification button if not verified
+                        const sendBtn = document.getElementById('sendVerifyBtn');
+                        if (!user.email_verified && user.email) {
+                            sendBtn.style.display = 'inline-block';
+                        } else {
+                            sendBtn.style.display = 'none';
+                        }
+                        
                         // Format login method
                         const loginMethods = {
                             'email': '📧 信箱',
@@ -565,6 +577,45 @@
                 .catch(err => {
                     console.error('Error loading user profile:', err);
                 });
+        }
+
+        function sendVerificationEmail() {
+            const userId = localStorage.getItem('userId');
+            const email = document.getElementById('profileEmail').textContent;
+            const messageEl = document.getElementById('verifyMessage');
+            const sendBtn = document.getElementById('sendVerifyBtn');
+            
+            if (!userId || !email || email === '-') {
+                messageEl.textContent = '❌ 無法發送驗證信';
+                return;
+            }
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = '發送中...';
+            messageEl.textContent = '';
+
+            fetch('/api/send-verification-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, email: email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    messageEl.textContent = '✅ 驗證信已發送，請檢查您的信箱！';
+                    sendBtn.textContent = '已發送';
+                } else {
+                    messageEl.textContent = '❌ ' + (data.message || '發送失敗');
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = '發送驗證信';
+                }
+            })
+            .catch(err => {
+                console.error('Error sending verification email:', err);
+                messageEl.textContent = '❌ 發送失敗，請稍後再試';
+                sendBtn.disabled = false;
+                sendBtn.textContent = '發送驗證信';
+            });
         }
 
         function loadSubscriptions() {
