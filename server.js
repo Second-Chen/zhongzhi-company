@@ -841,3 +841,50 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// Get user profile endpoint
+app.get('/api/user/profile', async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '缺少用戶ID' });
+        }
+
+        const [rows] = await pool.execute(
+            'SELECT user_id, username, email, email_verified, login_method, created_at FROM users WHERE user_id = ?',
+            [user_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: '用戶不存在' });
+        }
+
+        const user = rows[0];
+        
+        // Format created_at
+        const createdAt = user.created_at ? new Date(user.created_at).toLocaleString('zh-TW', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : null;
+
+        res.json({
+            success: true,
+            user: {
+                id: user.user_id,
+                username: user.username,
+                email: user.email,
+                email_verified: user.email_verified === 1,
+                login_method: user.login_method,
+                created_at: createdAt
+            }
+        });
+
+    } catch (error) {
+        console.error('Get user profile error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});

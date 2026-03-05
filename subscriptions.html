@@ -444,6 +444,29 @@
                 <button class="logout-btn" onclick="logout()">登出</button>
             </div>
 
+            <!-- User Profile Section -->
+            <div class="user-profile" id="userProfile" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">帳號資訊</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">電子郵件</div>
+                        <div id="profileEmail" style="font-weight: 500;">-</div>
+                    </div>
+                    <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">信箱驗證</div>
+                        <div id="profileEmailVerified" style="font-weight: 500;">-</div>
+                    </div>
+                    <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">登入方式</div>
+                        <div id="profileLoginMethod" style="font-weight: 500;">-</div>
+                    </div>
+                    <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.5rem;">註冊時間</div>
+                        <div id="profileCreatedAt" style="font-weight: 500;">-</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="subscriptions-grid" id="subscriptionsList">
                 <!-- Subscriptions will be loaded here -->
             </div>
@@ -508,8 +531,40 @@
             displayName.textContent = lineDisplayName || username || '用戶';
             displayEmail.textContent = localStorage.getItem('line_email') || '';
 
+            // Load user profile
+            loadUserProfile();
+
             // Load subscriptions (placeholder - can be connected to backend API)
             loadSubscriptions();
+        }
+
+        function loadUserProfile() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            fetch(`/api/user/profile?user_id=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        const user = data.user;
+                        document.getElementById('profileEmail').textContent = user.email || '-';
+                        document.getElementById('profileEmailVerified').textContent = user.email_verified ? '✅ 已驗證' : '❌ 未驗證';
+                        
+                        // Format login method
+                        const loginMethods = {
+                            'email': '📧 信箱',
+                            'line': '💬 LINE',
+                            'apple': '🍎 Apple',
+                            'google': '🔵 Google',
+                            'kkid': '🎵 KKID'
+                        };
+                        document.getElementById('profileLoginMethod').textContent = loginMethods[user.login_method] || user.login_method || '-';
+                        document.getElementById('profileCreatedAt').textContent = user.created_at || '-';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading user profile:', err);
+                });
         }
 
         function loadSubscriptions() {
