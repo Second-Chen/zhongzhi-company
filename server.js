@@ -669,35 +669,23 @@ app.get('/api/orders/by-user', async (req, res) => {
 // Email verification helper function
 async function sendVerificationEmail(email, token) {
     const crypto = require('crypto');
-    const nodemailer = require('nodemailer');
+    const { Resend } = require('resend');
     
-    // Check SMTP configuration
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    const smtpHost = process.env.SMTP_HOST;
+    // Check Resend API key
+    const resendApiKey = process.env.RESEND_API_KEY;
     
-    console.log('SMTP Config Check:');
-    console.log('- SMTP_HOST:', smtpHost || 'NOT SET');
-    console.log('- SMTP_USER:', smtpUser ? 'SET' : 'NOT SET');
-    console.log('- SMTP_PASS:', smtpPass ? 'SET (' + smtpPass.length + ' chars)' : 'NOT SET');
+    console.log('Resend API Check:');
+    console.log('- RESEND_API_KEY:', resendApiKey ? 'SET (' + resendApiKey.length + ' chars)' : 'NOT SET');
     
-    if (!smtpUser || !smtpPass) {
-        console.error('SMTP_USER or SMTP_PASS not configured');
-        return { success: false, error: 'SMTP not configured' };
+    if (!resendApiKey) {
+        console.error('RESEND_API_KEY not configured');
+        return { success: false, error: 'Resend API not configured' };
     }
     
-    // Create transporter (configure with your SMTP settings)
-    const verifyUrl = `https://familyshare.online/verify-email.html?token=${token}`;
+    const resend = new Resend(resendApiKey);
     
-    const transporter = nodemailer.createTransport({
-        host: smtpHost || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || 587,
-        secure: false,
-        auth: {
-            user: smtpUser,
-            pass: smtpPass
-        }
-    });
+    // Verify URL
+    const verifyUrl = `https://familyshare.online/verify-email.html?token=${token}`;
 
     const mailOptions = {
         from: process.env.SMTP_FROM || '"家庭共享計畫" <noreply@familyshare.online>',
@@ -733,15 +721,21 @@ async function sendVerificationEmail(email, token) {
     };
 
     try {
-        console.log('SMTP config:', {
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            user: process.env.SMTP_USER,
-            from: process.env.SMTP_FROM
+        console.log('Sending email via Resend to:', email);
+        
+        const { data, error } = await resend.emails.send({
+            from: '家庭共享計畫 <noreply@familyshare.online>',
+            to: email,
+            subject: '【家庭共享計畫】Email 驗證信',
+            html: mailOptions.html
         });
         
-        await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully to:', email);
+        if (error) {
+            console.error('Resend error:', error);
+            return { success: false, error: error.message };
+        }
+        
+        console.log('Email sent successfully to:', email, '| ID:', data?.id);
         return true;
     } catch (error) {
         console.error('Email sending error:', error.message);
