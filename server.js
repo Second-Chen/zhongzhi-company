@@ -44,9 +44,9 @@ async function createReferralCode(userId, username) {
     validUntil.setFullYear(validUntil.getFullYear() + 1); // Valid for 1 year
     
     await pool.execute(
-        `INSERT INTO discount_codes (code, discount_type, discount_value, commission, valid_until, applicable_products, is_active)
-         VALUES (?, 'percentage', 5.00, 10.00, ?, 'all', 1)`,
-        [code, validUntil]
+        `INSERT INTO discount_codes (code, discount_type, discount_value, commission, valid_until, applicable_products, is_active, created_by)
+         VALUES (?, 'percentage', 5.00, 10.00, ?, 'all', 1, ?)`,
+        [code, validUntil, userId]
     );
     
     // Get the inserted ID
@@ -724,6 +724,31 @@ app.get('/api/orders/by-user', async (req, res) => {
 
     } catch (error) {
         console.error('Get orders error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// Get discount codes by user ID
+app.get('/api/discount-codes/by-user', async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '請提供用戶ID' });
+        }
+
+        const [rows] = await pool.execute(
+            'SELECT * FROM discount_codes WHERE created_by = ? ORDER BY created_at DESC',
+            [user_id]
+        );
+
+        res.json({
+            success: true,
+            discount_codes: rows
+        });
+
+    } catch (error) {
+        console.error('Get discount codes error:', error);
         res.status(500).json({ success: false, message: '伺服器錯誤' });
     }
 });
