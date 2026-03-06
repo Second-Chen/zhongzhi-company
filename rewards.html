@@ -539,42 +539,6 @@
         }
 
         // Load commission summary
-            const userId = localStorage.getItem('userId');
-            if (!userId) return;
-
-            fetch(`/api/user/profile?user_id=${userId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.user) {
-                        const user = data.user;
-                        document.getElementById('profileEmail').textContent = user.email || '-';
-                        document.getElementById('profileEmailVerified').textContent = user.email_verified ? '✅ 已驗證' : '❌ 未驗證';
-                        
-                        // Show send verification button if not verified
-                        const sendBtn = document.getElementById('sendVerifyBtn');
-                        if (!user.email_verified && user.email) {
-                            sendBtn.style.display = 'inline-block';
-                        } else {
-                            sendBtn.style.display = 'none';
-                        }
-                        
-                        // Format login method
-                        const loginMethods = {
-                            'email': '📧 信箱',
-                            'line': '💬 LINE',
-                            'apple': '🍎 Apple',
-                            'google': '🔵 Google',
-                            'kkid': '🎵 KKID'
-                        };
-                        document.getElementById('profileLoginMethod').textContent = loginMethods[user.login_method] || user.login_method || '-';
-                        document.getElementById('profileCreatedAt').textContent = user.created_at || '-';
-                    }
-                })
-                .catch(err => {
-                    console.error('Error loading user profile:', err);
-                });
-        }
-
         function sendVerificationEmail() {
             const userId = localStorage.getItem('userId');
             const email = document.getElementById('profileEmail').textContent;
