@@ -753,6 +753,55 @@ app.get('/api/discount-codes/by-user', async (req, res) => {
     }
 });
 
+// Get total commission by user ID
+app.get('/api/commission/by-user', async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '請提供用戶ID' });
+        }
+
+        // Get user's discount codes first
+        const [discountCodes] = await pool.execute(
+            'SELECT id FROM discount_codes WHERE created_by = ?',
+            [user_id]
+        );
+
+        if (discountCodes.length === 0) {
+            return res.json({
+                success: true,
+                total_commission: 0,
+                discount_codes_count: 0,
+                orders_count: 0
+            });
+        }
+
+        const discountIds = discountCodes.map(d => d.id);
+
+        // Get total commission from orders using these discount codes
+        const placeholders = discountIds.map(() => '?').join(',');
+        const [orders] = await pool.execute(
+            `SELECT SUM(commission) as total_commission, COUNT(*) as orders_count 
+             FROM orders 
+             WHERE discount_id IN (${placeholders}) 
+             AND status IN ('paid', 'processing', 'completed')`,
+            discountIds
+        );
+
+        res.json({
+            success: true,
+            total_commission: orders[0].total_commission || 0,
+            discount_codes_count: discountCodes.length,
+            orders_count: orders[0].orders_count || 0
+        });
+
+    } catch (error) {
+        console.error('Get commission error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 // Email verification helper function
 async function sendVerificationEmail(email, token) {
     const crypto = require('crypto');
