@@ -156,6 +156,11 @@
                         localStorage.setItem('isLoggedIn', 'true');
                         localStorage.setItem('loginMethod', 'line');
                         
+                        // Store token if available
+                        if (serverData.token) {
+                            localStorage.setItem('token', serverData.token);
+                        }
+                        
                         // Redirect to dashboard or home with small delay
                         setTimeout(() => {
                             window.location.href = 'index.html';
