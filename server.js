@@ -497,7 +497,6 @@ app.post('/api/kkid-callback', async (req, res) => {
                 },
                 referralCode: referralCode
             });
-            });
         }
 
     } catch (error) {
