@@ -802,6 +802,53 @@ app.get('/api/commission/by-user', async (req, res) => {
     }
 });
 
+// Get orders by user's discount codes
+app.get('/api/orders/by-discount-codes', async (req, res) => {
+    try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: '請提供用戶ID' });
+        }
+
+        // Get user's discount codes first
+        const [discountCodes] = await pool.execute(
+            'SELECT id FROM discount_codes WHERE created_by = ?',
+            [user_id]
+        );
+
+        if (discountCodes.length === 0) {
+            return res.json({
+                success: true,
+                orders: []
+            });
+        }
+
+        const discountIds = discountCodes.map(d => d.id);
+
+        // Get orders using these discount codes
+        const placeholders = discountIds.map(() => '?').join(',');
+        const [orders] = await pool.execute(
+            `SELECT o.*, u.username as buyer_username, u.email as buyer_email 
+             FROM orders o 
+             LEFT JOIN users u ON o.user_id = u.user_id
+             WHERE o.discount_id IN (${placeholders})
+             ORDER BY o.created_at DESC 
+             LIMIT 10`,
+            discountIds
+        );
+
+        res.json({
+            success: true,
+            orders: orders
+        });
+
+    } catch (error) {
+        console.error('Get orders by discount codes error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 // Email verification helper function
 async function sendVerificationEmail(email, token) {
     const crypto = require('crypto');

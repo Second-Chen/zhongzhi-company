@@ -440,8 +440,8 @@
             <!-- Commission Summary -->
             <div id="commissionSummary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
                 <div style="text-align: center;">
-                    <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 0.5rem;">總佣金收入</div>
-                    <div id="totalCommission" style="font-size: 3rem; font-weight: 700;">NT$ 0</div>
+                    <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 0.5rem;">總獎勵點數</div>
+                    <div id="totalCommission" style="font-size: 3rem; font-weight: 700;">0 點</div>
                     <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.9rem; opacity: 0.9;">
                         <div>折扣碼數量: <span id="discountCodesCount">0</span></div>
                         <div>訂單數量: <span id="ordersCount">0</span></div>
@@ -449,9 +449,9 @@
                 </div>
             </div>
 
-            <!-- My Rewards Section -->
+            <!-- Recent Orders Section -->
             <div>
-                <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary);">我的奖励</h2>
+                <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary);">近十筆使用折扣碼的訂單</h2>
                 <div class="subscriptions-grid" id="discountCodesList">
                     <!-- Discount codes will be loaded here -->
                 </div>
@@ -693,61 +693,73 @@
                 });
         }
 
-        // Load discount codes
+        // Load orders by discount codes
         function loadDiscountCodes(userId) {
             const discountCodesList = document.getElementById('discountCodesList');
             
-            fetch(`/api/discount-codes/by-user?user_id=${userId}`)
+            fetch(`/api/orders/by-discount-codes?user_id=${userId}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.discount_codes.length > 0) {
-                        renderDiscountCodes(data.discount_codes);
+                    if (data.success && data.orders && data.orders.length > 0) {
+                        renderOrders(data.orders);
                     } else {
                         discountCodesList.innerHTML = `
                             <div class="no-subscriptions" style="grid-column: 1 / -1;">
-                                <div class="no-subscriptions-icon">🎫</div>
-                                <h3>尚無折扣碼</h3>
-                                <p>您目前沒有任何折扣碼</p>
+                                <div class="no-subscriptions-icon">📦</div>
+                                <h3>尚無訂單</h3>
+                                <p>目前沒有使用您折扣碼的訂單</p>
                             </div>
                         `;
                     }
                 })
                 .catch(err => {
-                    console.error('Error loading discount codes:', err);
+                    console.error('Error loading orders:', err);
                     discountCodesList.innerHTML = `
                         <div class="no-subscriptions" style="grid-column: 1 / -1;">
                             <div class="no-subscriptions-icon">⚠️</div>
                             <h3>載入失敗</h3>
-                            <p>無法載入折扣碼資料，請稍後再試</p>
+                            <p>無法載入訂單資料，請稍後再試</p>
                         </div>
                     `;
                 });
         }
 
-        function renderDiscountCodes(discountCodes) {
+        function renderOrders(orders) {
             const discountCodesList = document.getElementById('discountCodesList');
             
-            const html = discountCodes.map(code => {
-                const discountType = code.discount_type === 'percentage' ? '%' : 'NT$';
-                const discountValue = code.discount_value;
-                const isActive = code.is_active ? '啟用' : '停用';
-                const isActiveClass = code.is_active ? 'status-completed' : 'status-cancelled';
-                const validUntil = new Date(code.valid_until).toLocaleString('zh-TW');
-                const currentUses = code.current_uses || 0;
-                const maxUses = code.max_uses || '無限制';
+            const productNames = {
+                'youtube': 'YouTube Premium 家庭方案',
+                'kkbox': 'KKBOX 家庭方案',
+                'microsoft365': 'Microsoft 365 進階版'
+            };
+
+            const statusLabels = {
+                'pending': '待處理',
+                'paid': '已付款',
+                'processing': '處理中',
+                'completed': '已完成',
+                'cancelled': '已取消'
+            };
+
+            const html = orders.map(order => {
+                const productName = productNames[order.product_type] || order.product_type;
+                const statusLabel = statusLabels[order.status] || order.status;
+                const statusClass = `status-${order.status}`;
+                const orderDate = new Date(order.created_at).toLocaleString('zh-TW');
                 
                 return `
                     <div class="subscription-card">
                         <div class="subscription-header">
-                            <div class="subscription-title" style="font-size: 1.2rem; font-weight: 700;">${code.code}</div>
+                            <div class="subscription-title">${productName}</div>
                         </div>
-                        <span class="subscription-status ${isActiveClass}">${isActive}</span>
+                        <span class="subscription-status ${statusClass}">${statusLabel}</span>
                         <div class="subscription-details">
-                            <p>💰 折扣: ${discountValue}${discountType}</p>
-                            <p>📅 有效期限: ${validUntil}</p>
-                            <p>📊 使用次數: ${currentUses} / ${maxUses}</p>
-                            <p>👥 適用產品: ${code.applicable_products === 'all' ? '全部' : code.applicable_products}</p>
-                            <p class="order-date">🎁 佣金: ${code.commission || 0}%</p>
+                            <p>🎫 折扣碼: ${order.discount_code || '-'}</p>
+                            <p>💰 獎勵點數: ${order.commission || 0}</p>
+                            <p>📅 方案時長: ${order.plan_duration_months} 個月</p>
+                            <p>👤 購買人: ${order.buyer_username || order.buyer_email || '-'}</p>
+                            <p class="order-date">📆 訂單日期: ${orderDate}</p>
+                            <p class="order-id">訂單編號: ${order.order_id}</p>
                         </div>
                     </div>
                 `;
