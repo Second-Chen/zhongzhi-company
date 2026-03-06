@@ -834,7 +834,7 @@ app.get('/api/orders/by-discount-codes', async (req, res) => {
              LEFT JOIN users u ON o.user_id = u.user_id
              WHERE o.discount_id IN (${placeholders})
              ORDER BY o.created_at DESC 
-             LIMIT 10`,
+             LIMIT 5`,
             discountIds
         );
 
