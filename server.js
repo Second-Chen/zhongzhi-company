@@ -559,6 +559,20 @@ app.get('/api/coupon/validate', async (req, res) => {
         }
 
         // Return valid coupon data
+        // Check if user is logged in and trying to use their own discount code
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            try {
+                const token = Buffer.from(authHeader.split(' ')[1], 'base64').toString();
+                const userId = parseInt(token.split(':')[0]);
+                if (!isNaN(userId) && coupon.created_by === userId) {
+                    return res.json({ valid: false, message: '不能使用自己的折扣碼' });
+                }
+            } catch (e) {
+                // Token parsing failed, continue without user check
+            }
+        }
+
         res.json({
             valid: true,
             message: '折扣碼套用成功',
