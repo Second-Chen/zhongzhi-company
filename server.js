@@ -113,6 +113,122 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Forgot password - send reset email
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: '請輸入電子郵件' });
+        }
+
+        // Check if user exists with this email
+        const [users] = await pool.execute(
+            'SELECT user_id, email, username FROM users WHERE email = ?',
+            [email]
+        );
+
+        // Always return success to prevent email enumeration
+        if (users.length === 0) {
+            return res.json({ success: true, message: '如果帳號存在，已寄送密碼重設信' });
+        }
+
+        const user = users[0];
+
+        // Generate reset token
+        const crypto = require('crypto');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+        // Save token to database
+        await pool.execute(
+            'UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE user_id = ?',
+            [resetToken, resetExpires, user.user_id]
+        );
+
+        // Send reset email
+        const resetUrl = `https://familyshare.online/reset-password.html?token=${resetToken}&email=${email}`;
+        
+        const resendApiKey = process.env.RESEND_API_KEY;
+        
+        if (resendApiKey) {
+            const { Resend } = require('resend');
+            const resend = new Resend(resendApiKey);
+            
+            try {
+                await resend.emails.send({
+                    from: 'Family Share <noreply@familyshare.online>',
+                    to: email,
+                    subject: '密碼重設 - 家庭共享計畫',
+                    html: `
+                        <div style="font-family: 'Noto Sans TC', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                            <h2 style="color: #2d3436;">密碼重設</h2>
+                            <p>您好，${user.username}，</p>
+                            <p>我們收到了您的密碼重設請求。請點擊以下連結重設密碼：</p>
+                            <p style="margin: 20px 0;">
+                                <a href="${resetUrl}" style="background: #0984e3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">重設密碼</a>
+                            </p>
+                            <p>連結將在 1 小時後失效。</p>
+                            <p style="color: #636e72; font-size: 14px; margin-top: 30px;">
+                                如果您沒有請求重設密碼，請忽略此郵件。
+                            </p>
+                        </div>
+                    `
+                });
+            } catch (emailError) {
+                console.error('Send reset email error:', emailError);
+            }
+        }
+
+        res.json({ success: true, message: '如果帳號存在，已寄送密碼重設信' });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// Reset password
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email, token, newPassword } = req.body;
+
+        if (!email || !token || !newPassword) {
+            return res.status(400).json({ success: false, message: '請填寫所有欄位' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: '密碼至少需要 6 個字元' });
+        }
+
+        // Verify token
+        const [users] = await pool.execute(
+            'SELECT user_id FROM users WHERE email = ? AND password_reset_token = ? AND password_reset_expires > NOW()',
+            [email, token]
+        );
+
+        if (users.length === 0) {
+            return res.status(400).json({ success: false, message: '連結已失效或不存在' });
+        }
+
+        // Hash new password
+        const bcrypt = require('bcryptjs');
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+
+        // Update password and clear reset token
+        await pool.execute(
+            'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE user_id = ?',
+            [passwordHash, users[0].user_id]
+        );
+
+        res.json({ success: true, message: '密碼重設成功，請使用新密碼登入' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 // Register endpoint (optional)
 app.post('/api/register', async (req, res) => {
     try {
