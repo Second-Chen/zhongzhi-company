@@ -1094,6 +1094,22 @@
             if (modal) {
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
+                
+                // Clear discount code input
+                const prefix = modalId.replace('Modal', '');
+                const couponInput = document.getElementById(prefix + 'CouponCode');
+                const priceElement = document.getElementById(prefix + 'Price');
+                if (couponInput) couponInput.value = '';
+                
+                // Reset price display
+                const originalPriceMap = {
+                    'yt': 780,
+                    'kkbox': 780,
+                    'microsoft365': 1788
+                };
+                if (priceElement && originalPriceMap[prefix]) {
+                    priceElement.innerHTML = `<span style="color: #2d3436; font-weight: bold;">NT$ ${originalPriceMap[prefix]}</span>`;
+                }
             }
         }
 
@@ -1102,6 +1118,25 @@
             if (event.target.classList.contains('modal-overlay')) {
                 event.target.classList.remove('active');
                 document.body.style.overflow = '';
+                
+                // Clear discount code inputs
+                const prefixes = ['yt', 'kkbox', 'microsoft365'];
+                const originalPriceMap = {
+                    'yt': 780,
+                    'kkbox': 780,
+                    'microsoft365': 1788
+                };
+                prefixes.forEach(prefix => {
+                    const modal = document.getElementById(prefix + 'Modal');
+                    if (modal && modal.classList.contains('active') === false) {
+                        const couponInput = document.getElementById(prefix + 'CouponCode');
+                        const priceElement = document.getElementById(prefix + 'Price');
+                        if (couponInput) couponInput.value = '';
+                        if (priceElement && originalPriceMap[prefix]) {
+                            priceElement.innerHTML = `<span style="color: #2d3436; font-weight: bold;">NT$ ${originalPriceMap[prefix]}</span>`;
+                        }
+                    }
+                });
             }
         });
 
