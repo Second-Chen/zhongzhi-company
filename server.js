@@ -94,7 +94,7 @@ app.post('/api/login', async (req, res) => {
         );
 
         // Generate simple token (in production, use JWT)
-        const token = Buffer.from(`${user.user_id}:${username}`).toString('base64');
+        const token = Buffer.from(`${user.user_id}:${email}`).toString('base64');
 
         res.json({
             success: true,
