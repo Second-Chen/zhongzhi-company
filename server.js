@@ -633,23 +633,25 @@ app.post('/api/orders/create', async (req, res) => {
             }
         }
 
-        // If discount code is provided, get the commission
+        // If discount code is provided, get the commission and discount_id
         let commission = 0;
+        let discountId = null;
         if (discount_code) {
             const [codeRows] = await pool.execute(
-                'SELECT commission FROM discount_codes WHERE code = ?',
+                'SELECT id, commission FROM discount_codes WHERE code = ?',
                 [discount_code]
             );
             if (codeRows.length > 0) {
                 commission = codeRows[0].commission || 0;
+                discountId = codeRows[0].id || null;
             }
         }
 
         // Insert order
         const [result] = await pool.execute(
-            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, commission, final_price, payment_method, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, discount_code || null, discount_amount || 0, commission, final_price, payment_method || null, notes || null]
+            `INSERT INTO orders (order_id, user_id, product_type, plan_duration_months, sub_accounts, original_price, discount_code, discount_amount, discount_id, commission, final_price, payment_method, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [orderId, userId, product_type, plan_duration_months, sub_accounts || 1, original_price, discount_code || null, discount_amount || 0, discountId, commission, final_price, payment_method || null, notes || null]
         );
 
         res.json({
