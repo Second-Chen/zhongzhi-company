@@ -638,10 +638,14 @@ app.post('/api/orders/create', async (req, res) => {
         let discountId = null;
         if (discount_code) {
             const [codeRows] = await pool.execute(
-                'SELECT id, commission FROM discount_codes WHERE code = ?',
+                'SELECT id, commission, created_by FROM discount_codes WHERE code = ?',
                 [discount_code]
             );
             if (codeRows.length > 0) {
+                // Check if user is using their own discount code
+                if (codeRows[0].created_by === userId) {
+                    return res.status(400).json({ success: false, message: '不能使用自己的折扣碼' });
+                }
                 commission = codeRows[0].commission || 0;
                 discountId = codeRows[0].id || null;
             }
