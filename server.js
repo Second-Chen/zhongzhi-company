@@ -199,7 +199,8 @@ app.post('/api/line-callback', async (req, res) => {
                     username: existingUser[0].username,
                     email: line_email || existingUser[0].email,
                     line_display_name
-                }
+                },
+                token: Buffer.from(`${existingUser[0].user_id}:${line_email || existingUser[0].email}`).toString('base64')
             });
         } else {
             // Create new user
@@ -224,7 +225,8 @@ app.post('/api/line-callback', async (req, res) => {
                     email: line_email,
                     line_display_name
                 },
-                referralCode: referralCode
+                referralCode: referralCode,
+                token: Buffer.from(`${result.insertId}:${line_email}`).toString('base64')
             });
         }
 
