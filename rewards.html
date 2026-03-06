@@ -441,10 +441,10 @@
             <div id="commissionSummary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
                 <div style="text-align: center;">
                     <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 0.5rem;">總獎勵點數</div>
-                    <div id="totalCommission" style="font-size: 3rem; font-weight: 700;">0 點</div>
+                    <div id="totalCommission" style="font-size: 3rem; font-weight: 700;">0</div>
                     <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.9rem; opacity: 0.9;">
-                        <div>折扣碼數量: <span id="discountCodesCount">0</span></div>
-                        <div>訂單數量: <span id="ordersCount">0</span></div>
+                        <div>折扣碼: <span id="discountCodesCount">0</span></div>
+                        <div>使用折扣碼的訂單總數: <span id="ordersCount">0</span></div>
                     </div>
                 </div>
             </div>
@@ -683,7 +683,7 @@
                     console.log('Commission data:', data);
                     if (data.success) {
                         const commission = parseFloat(data.total_commission) || 0;
-                        document.getElementById('totalCommission').textContent = 'NT$ ' + commission;
+                        document.getElementById('totalCommission').textContent = commission;
                         document.getElementById('discountCodesCount').textContent = data.discount_codes_count || 0;
                         document.getElementById('ordersCount').textContent = data.orders_count || 0;
                     }
