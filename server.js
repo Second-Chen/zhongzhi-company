@@ -764,7 +764,7 @@ app.get('/api/commission/by-user', async (req, res) => {
 
         // Get user's discount codes first
         const [discountCodes] = await pool.execute(
-            'SELECT id FROM discount_codes WHERE created_by = ?',
+            'SELECT id, code FROM discount_codes WHERE created_by = ?',
             [user_id]
         );
 
@@ -773,7 +773,8 @@ app.get('/api/commission/by-user', async (req, res) => {
                 success: true,
                 total_commission: 0,
                 discount_codes_count: 0,
-                orders_count: 0
+                orders_count: 0,
+                discount_codes: []
             });
         }
 
@@ -793,7 +794,8 @@ app.get('/api/commission/by-user', async (req, res) => {
             success: true,
             total_commission: orders[0].total_commission || 0,
             discount_codes_count: discountCodes.length,
-            orders_count: orders[0].orders_count || 0
+            orders_count: orders[0].orders_count || 0,
+            discount_codes: discountCodes
         });
 
     } catch (error) {

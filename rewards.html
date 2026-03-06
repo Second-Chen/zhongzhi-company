@@ -686,6 +686,12 @@
                         document.getElementById('totalCommission').textContent = commission;
                         document.getElementById('discountCodesCount').textContent = data.discount_codes_count || 0;
                         document.getElementById('ordersCount').textContent = data.orders_count || 0;
+                        
+                        // Display user's discount codes
+                        if (data.discount_codes && data.discount_codes.length > 0) {
+                            const codes = data.discount_codes.map(c => c.code).join(', ');
+                            document.getElementById('discountCodesCount').textContent = codes;
+                        }
                     }
                 })
                 .catch(err => {
