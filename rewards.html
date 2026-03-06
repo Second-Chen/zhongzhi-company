@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的訂閱 - 家庭共享計畫</title>
+    <title>我的奖励 - 家庭共享计画</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -408,7 +408,7 @@
                 <div class="dropdown-menu" id="userDropdown">
                     <a href="subscriptions.html">
                         <span class="icon">📋</span>
-                        我的訂閱
+                        我的奖励
                     </a>
                     <a href="#" onclick="logout()">
                         <span class="icon">🚪</span>
@@ -420,7 +420,7 @@
     </header>
 
     <div class="container">
-        <h1 class="page-title">我的訂閱</h1>
+        <h1 class="page-title">我的奖励</h1>
         
         <!-- Logged out state -->
         <div id="loggedOutContent" style="display: none;">
@@ -473,6 +473,14 @@
 
             <div class="subscriptions-grid" id="subscriptionsList">
                 <!-- Subscriptions will be loaded here -->
+            </div>
+
+            <!-- Discount Codes Section -->
+            <div style="margin-top: 2rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary);">我的折扣碼</h2>
+                <div class="subscriptions-grid" id="discountCodesList">
+                    <!-- Discount codes will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
@@ -538,8 +546,16 @@
             // Load user profile
             loadUserProfile();
 
+            // Get userId for discount codes
+            const userId = localStorage.getItem('userId');
+
             // Load subscriptions (placeholder - can be connected to backend API)
             loadSubscriptions();
+
+            // Load discount codes
+            if (userId) {
+                loadDiscountCodes(userId);
+            }
         }
 
         function loadUserProfile() {
@@ -627,8 +643,8 @@
                     <div class="no-subscriptions" style="grid-column: 1 / -1;">
                         <div class="no-subscriptions-icon">📦</div>
                         <h3>尚無訂閱</h3>
-                        <p>您目前沒有任何訂閱項目</p>
-                        <a href="index.html#subscriptions" class="browse-btn">瀏覽訂閱項目</a>
+                        <p>您目前沒有任何奖励中心</p>
+                        <a href="index.html#subscriptions" class="browse-btn">瀏覽奖励中心</a>
                     </div>
                 `;
                 return;
@@ -645,8 +661,8 @@
                             <div class="no-subscriptions" style="grid-column: 1 / -1;">
                                 <div class="no-subscriptions-icon">📦</div>
                                 <h3>尚無訂閱</h3>
-                                <p>您目前沒有任何訂閱項目</p>
-                                <a href="index.html#subscriptions" class="browse-btn">瀏覽訂閱項目</a>
+                                <p>您目前沒有任何奖励中心</p>
+                                <a href="index.html#subscriptions" class="browse-btn">瀏覽奖励中心</a>
                             </div>
                         `;
                     }
@@ -721,6 +737,69 @@
             }).join('');
 
             subscriptionsList.innerHTML = html;
+        }
+
+        // Load discount codes
+        function loadDiscountCodes(userId) {
+            const discountCodesList = document.getElementById('discountCodesList');
+            
+            fetch(`/api/discount-codes/by-user?user_id=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.discount_codes.length > 0) {
+                        renderDiscountCodes(data.discount_codes);
+                    } else {
+                        discountCodesList.innerHTML = `
+                            <div class="no-subscriptions" style="grid-column: 1 / -1;">
+                                <div class="no-subscriptions-icon">🎫</div>
+                                <h3>尚無折扣碼</h3>
+                                <p>您目前沒有任何折扣碼</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading discount codes:', err);
+                    discountCodesList.innerHTML = `
+                        <div class="no-subscriptions" style="grid-column: 1 / -1;">
+                            <div class="no-subscriptions-icon">⚠️</div>
+                            <h3>載入失敗</h3>
+                            <p>無法載入折扣碼資料，請稍後再試</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function renderDiscountCodes(discountCodes) {
+            const discountCodesList = document.getElementById('discountCodesList');
+            
+            const html = discountCodes.map(code => {
+                const discountType = code.discount_type === 'percentage' ? '%' : 'NT$';
+                const discountValue = code.discount_value;
+                const isActive = code.is_active ? '啟用' : '停用';
+                const isActiveClass = code.is_active ? 'status-completed' : 'status-cancelled';
+                const validUntil = new Date(code.valid_until).toLocaleString('zh-TW');
+                const currentUses = code.current_uses || 0;
+                const maxUses = code.max_uses || '無限制';
+                
+                return `
+                    <div class="subscription-card">
+                        <div class="subscription-header">
+                            <div class="subscription-title" style="font-size: 1.2rem; font-weight: 700;">${code.code}</div>
+                        </div>
+                        <span class="subscription-status ${isActiveClass}">${isActive}</span>
+                        <div class="subscription-details">
+                            <p>💰 折扣: ${discountValue}${discountType}</p>
+                            <p>📅 有效期限: ${validUntil}</p>
+                            <p>📊 使用次數: ${currentUses} / ${maxUses}</p>
+                            <p>👥 適用產品: ${code.applicable_products === 'all' ? '全部' : code.applicable_products}</p>
+                            <p class="order-date">🎁 佣金: ${code.commission || 0}%</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            discountCodesList.innerHTML = html;
         }
 
         init();
