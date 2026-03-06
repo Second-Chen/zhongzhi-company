@@ -62,16 +62,16 @@ async function createReferralCode(userId, username) {
 // Login endpoint
 app.post('/api/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !password) {
+        if (!email || !password) {
             return res.status(400).json({ message: '請輸入帳號和密碼' });
         }
 
-        // Query user from database
+        // Query user from database by email
         const [rows] = await pool.execute(
-            'SELECT * FROM users WHERE username = ?',
-            [username]
+            'SELECT * FROM users WHERE email = ?',
+            [email]
         );
 
         if (rows.length === 0) {
