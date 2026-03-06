@@ -480,10 +480,21 @@
 
         // Check login status and load data
         function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDebug = urlParams.get('debug') === '1';
+            
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
             const userMenu = document.getElementById('userMenu');
             const loggedOutContent = document.getElementById('loggedOutContent');
             const loggedInContent = document.getElementById('loggedInContent');
+            
+            if (isDebug) {
+                console.log('isLoggedIn:', isLoggedIn);
+                console.log('userId:', localStorage.getItem('userId'));
+                console.log('username:', localStorage.getItem('username'));
+                console.log('line_email:', localStorage.getItem('line_email'));
+                alert('isLoggedIn: ' + isLoggedIn + '\nuserId: ' + localStorage.getItem('userId'));
+            }
 
             if (!isLoggedIn) {
                 loggedOutContent.style.display = 'block';
