@@ -341,24 +341,14 @@
             <p>會員登入</p>
         </div>
 
-        <!-- LINE Login (移到最上方) -->
-        <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2009276934&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fcallback.html&scope=openid%20profile%20email&prompt=consent" class="line-login-btn" onclick="this.href += '&state=' + Math.random().toString(36).substring(2);">
-            📱 使用 LINE 登入
-        </a>
-
-        <!-- Google Login -->
-        <a href="#" class="google-login-btn" id="googleLoginBtn" onclick="googleLogin()">
-            🔵 使用 Google 帳號 登入
-        </a>
-
-        <!-- Email Login Toggle -->
+        <!-- Email Login Toggle (移到最上方) -->
         <div class="email-login-section">
             <button class="email-login-toggle" onclick="toggleEmailLogin()">
                 ✉️ 使用 Email / 密碼 登入
             </button>
 
             <!-- Email Login Form -->
-            <form class="email-login-form" id="emailLoginForm" onsubmit="handleEmailLogin(event)">
+            <form class="email-login-form active" id="emailLoginForm" onsubmit="handleEmailLogin(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required placeholder="輸入您的 Email">
@@ -398,6 +388,20 @@
                 <a href="#" class="register-link" onclick="showLogin()">已有帳號？登入</a>
             </form>
         </div>
+
+        <div class="login-divider">
+            <span>或</span>
+        </div>
+
+        <!-- LINE Login -->
+        <a href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2009276934&redirect_uri=https%3A%2F%2Ffamilyshare.online%2Fcallback.html&scope=openid%20profile%20email&prompt=consent" class="line-login-btn" onclick="this.href += '&state=' + Math.random().toString(36).substring(2);">
+            📱 使用 LINE 登入
+        </a>
+
+        <!-- Google Login -->
+        <a href="#" class="google-login-btn" id="googleLoginBtn" onclick="googleLogin()">
+            🔵 使用 Google 帳號 登入
+        </a>
 
         <a href="index.html" class="back-link">← 返回首頁</a>
     </div>
