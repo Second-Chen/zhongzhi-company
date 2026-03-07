@@ -101,29 +101,6 @@
             box-shadow: 0 10px 30px rgba(6, 199, 85, 0.3);
         }
 
-        .apple-login-btn {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            background: #000000;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.3s;
-            margin-bottom: 1rem;
-        }
-
-        .apple-login-btn:hover {
-            background: #333333;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
         .google-login-btn {
             display: block;
             width: 100%;
@@ -145,29 +122,6 @@
             background: #f5f5f5;
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .kkid-login-btn {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            background: #1dace3;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.3s;
-            margin-bottom: 1rem;
-        }
-
-        .kkid-login-btn:hover {
-            background: #1992c9;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(29, 172, 227, 0.3);
         }
 
         .email-login-section {
@@ -308,9 +262,7 @@
             }
 
             .line-login-btn,
-            .apple-login-btn,
-            .google-login-btn,
-            .kkid-login-btn {
+            .google-login-btn {
                 padding: 0.875rem;
                 font-size: 0.95rem;
                 margin-bottom: 0.75rem;
@@ -374,9 +326,7 @@
             }
 
             .line-login-btn,
-            .apple-login-btn,
-            .google-login-btn,
-            .kkid-login-btn {
+            .google-login-btn {
                 padding: 0.75rem;
                 font-size: 0.9rem;
             }
@@ -396,24 +346,10 @@
             📱 使用 LINE 登入
         </a>
 
-        <!-- Apple Sign In -->
-        <a href="javascript:void(0)" class="apple-login-btn" onclick="appleSignIn()">
-            🍎 使用 Apple ID 登入
-        </a>
-
         <!-- Google Login -->
         <a href="#" class="google-login-btn" id="googleLoginBtn" onclick="googleLogin()">
             🔵 使用 Google 帳號 登入
         </a>
-
-        <!-- KKID Login -->
-        <a href="#" class="kkid-login-btn" id="kkidLoginBtn" onclick="kkidLogin()">
-            🎵 使用 KKBOX 登入
-        </a>
-
-        <div class="login-divider">
-            <span>或</span>
-        </div>
 
         <!-- Email Login Toggle -->
         <div class="email-login-section">
@@ -482,13 +418,6 @@
             document.getElementById('emailLoginForm').classList.add('active');
         }
 
-        function appleSignIn() {
-            // Apple Sign In would require registering with Apple Developer
-            // For now, redirect to email login as alternative
-            alert('Apple ID 登入功能敬請期待！\n\n目前支援 Google 登入和 Email/密碼 登入。');
-            document.getElementById('emailLoginForm').classList.add('active');
-        }
-
         function googleLogin() {
             // Fetch Google Client ID from server and redirect
             fetch('/api/config/google-client-id')
@@ -505,28 +434,6 @@
                 .catch(err => {
                     console.error('Error:', err);
                     alert('無法載入 Google 登入設定');
-                });
-        }
-
-        function kkidLogin() {
-            // Fetch KKBOX Client ID from server and redirect
-            fetch('/api/config/kkbox-client-id')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.clientId) {
-                        const redirectUri = encodeURIComponent('https://familyshare.online/kkid-callback.html');
-                        // Generate random state for security
-                        const state = Math.random().toString(36).substring(7);
-                        // KKBOX OAuth authorization endpoint (from official docs)
-                        const kkboxAuthUrl = `https://account.kkbox.com/oauth2/authorize?redirect_uri=${redirectUri}&client_id=${data.clientId}&response_type=code&state=${state}`;
-                        window.location.href = kkboxAuthUrl;
-                    } else {
-                        alert('KKID 登入尚未設定');
-                    }
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    alert('無法載入 KKID 登入設定');
                 });
         }
 
