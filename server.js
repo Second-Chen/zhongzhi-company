@@ -103,7 +103,8 @@ app.post('/api/login', async (req, res) => {
             user: {
                 id: user.user_id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                points: user.points || 0
             }
         });
 
@@ -241,9 +242,9 @@ app.post('/api/register', async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert user
+        // Insert user with default 50 points welcome bonus
         const [result] = await pool.execute(
-            'INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
+            'INSERT INTO users (username, password_hash, email, points) VALUES (?, ?, ?, 50)',
             [username, hashedPassword, email]
         );
 
@@ -253,7 +254,8 @@ app.post('/api/register', async (req, res) => {
         res.json({
             success: true,
             message: '註冊成功',
-            referralCode: referralCode
+            referralCode: referralCode,
+            points: 50
         });
 
     } catch (error) {
@@ -324,8 +326,8 @@ app.post('/api/line-callback', async (req, res) => {
             const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
 
             const [result] = await pool.execute(
-                `INSERT INTO users (username, password_hash, email, line_user_id, line_display_name, line_picture_url, line_email, line_access_token, line_refresh_token, line_token_expires_at, login_method)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'line')`,
+                `INSERT INTO users (username, password_hash, email, line_user_id, line_display_name, line_picture_url, line_email, line_access_token, line_refresh_token, line_token_expires_at, login_method, points)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'line', 50)`,
                 [username, defaultPassword, line_email || '', line_user_id, line_display_name, line_picture_url, line_email, access_token, refresh_token, tokenExpiresAt]
             );
 
@@ -339,7 +341,8 @@ app.post('/api/line-callback', async (req, res) => {
                     id: result.insertId,
                     username,
                     email: line_email,
-                    line_display_name
+                    line_display_name,
+                    points: 50
                 },
                 referralCode: referralCode,
                 token: Buffer.from(`${result.insertId}:${line_email}`).toString('base64')
@@ -447,8 +450,8 @@ app.post('/api/google-callback', async (req, res) => {
             const defaultPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
 
             const [result] = await pool.execute(
-                `INSERT INTO users (username, password_hash, email, google_user_id, google_display_name, google_email, google_access_token, google_refresh_token, google_token_expires_at, login_method)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'google')`,
+                `INSERT INTO users (username, password_hash, email, google_user_id, google_display_name, google_email, google_access_token, google_refresh_token, google_token_expires_at, login_method, points)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'google', 50)`,
                 [username, defaultPassword, googleUser.email || '', googleUser.id, googleUser.name || null, googleUser.email || null, tokenData.access_token, tokenData.refresh_token || null, tokenExpiresAt]
             );
 
@@ -463,7 +466,8 @@ app.post('/api/google-callback', async (req, res) => {
                     username: username,
                     google_display_name: googleUser.name,
                     google_email: googleUser.email,
-                    picture: googleUser.picture
+                    picture: googleUser.picture,
+                    points: 50
                 },
                 referralCode: referralCode
             });
@@ -1019,7 +1023,7 @@ app.get('/api/user/profile', async (req, res) => {
         }
 
         const [rows] = await pool.execute(
-            'SELECT user_id, username, email, email_verified, login_method, created_at FROM users WHERE user_id = ?',
+            'SELECT user_id, username, email, email_verified, login_method, created_at, points FROM users WHERE user_id = ?',
             [user_id]
         );
 
@@ -1046,7 +1050,8 @@ app.get('/api/user/profile', async (req, res) => {
                 email: user.email,
                 email_verified: user.email_verified === 1,
                 login_method: user.login_method,
-                created_at: createdAt
+                created_at: createdAt,
+                points: user.points || 0
             }
         });
 
